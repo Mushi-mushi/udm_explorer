@@ -67,20 +67,19 @@ function App() {
 
   const currentData = view === 'event' ? eventData : entityData;
 
-  // Dynamically generate the list of all available use cases
   const allUseCases = useMemo(() => {
     const useCaseSet = new Set();
-    collectUseCases(eventData, useCaseSet);
-    collectUseCases(entityData, useCaseSet);
+    if (eventData) collectUseCases(eventData, useCaseSet);
+    if (entityData) collectUseCases(entityData, useCaseSet);
     return Array.from(useCaseSet).sort();
   }, []);
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-4 sm:p-8">
+    <div className="bg-solarized-base03 text-solarized-base0 min-h-screen p-4 sm:p-8 font-[sans-serif]">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Unified Data Model Explorer</h1>
-          <p className="text-gray-400">An interactive viewer for the UDM schema. Select a model to explore.</p>
+          <h1 className="text-4xl font-bold mb-2 text-solarized-base1">Unified Data Model Explorer</h1>
+          <p className="text-solarized-base00">An interactive viewer for the UDM schema. Select a model to explore.</p>
         </header>
 
         {/* --- Model Toggle Buttons --- */}
@@ -88,7 +87,7 @@ function App() {
           <button
             onClick={() => { setView('event'); setSelectedField(null); setSearchQuery(''); setSelectedUseCase(''); }}
             className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-              view === 'event' ? 'bg-cyan-500 text-white' : 'bg-gray-700 hover:bg-gray-600'
+              view === 'event' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'
             }`}
           >
             Event Model
@@ -96,7 +95,7 @@ function App() {
           <button
             onClick={() => { setView('entity'); setSelectedField(null); setSearchQuery(''); setSelectedUseCase(''); }}
             className={`px-6 py-2 rounded-full font-semibold transition-colors ${
-              view === 'entity' ? 'bg-cyan-500 text-white' : 'bg-gray-700 hover:bg-gray-600'
+              view === 'entity' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'
             }`}
           >
             Entity Model
@@ -109,8 +108,8 @@ function App() {
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setSelectedUseCase(''); }}
-            placeholder="Search for a UDM field..."
-            className="w-full px-4 py-2 bg-gray-700 text-white rounded-full border-2 border-transparent focus:outline-none focus:border-cyan-500"
+            placeholder="Search for a UDM field (or 'repeated')..."
+            className="w-full px-4 py-2 bg-solarized-base02 text-solarized-base1 rounded-full border-2 border-transparent focus:outline-none focus:border-solarized-cyan"
           />
         </div>
 
@@ -118,7 +117,7 @@ function App() {
         <div className="flex justify-center flex-wrap gap-2 mb-8 max-w-3xl mx-auto">
           <button
             onClick={() => setSelectedUseCase('')}
-            className={`px-3 py-1 text-sm rounded-full transition-colors ${!selectedUseCase ? 'bg-purple-500 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}
+            className={`px-3 py-1 text-sm rounded-full transition-colors ${!selectedUseCase ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}
           >
             All Fields
           </button>
@@ -126,7 +125,7 @@ function App() {
             <button
               key={uc}
               onClick={() => { setSelectedUseCase(uc); setSearchQuery(''); }}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${selectedUseCase === uc ? 'bg-purple-500 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}
+              className={`px-3 py-1 text-sm rounded-full transition-colors ${selectedUseCase === uc ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}
             >
               {uc}
             </button>
@@ -134,7 +133,7 @@ function App() {
         </div>
         
         <div className="flex flex-col md:flex-row gap-8">
-          <main className="bg-gray-800 rounded-xl p-4 shadow-lg md:w-1/2 min-w-0">
+          <main className="bg-solarized-base02 rounded-xl p-4 shadow-lg md:w-1/2 min-w-0">
             <UdmField
               key={view + searchQuery + selectedUseCase}
               field={currentData}
@@ -154,4 +153,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

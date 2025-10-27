@@ -2,22 +2,19 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- Helper function for search matching ---
+// --- Helper functions (no changes) ---
 const nodeContainsSearchMatch = (node, query) => {
-  if (node.name.toLowerCase().includes(query)) {
-    return true;
-  }
+  const isDirectMatch = node.name.toLowerCase().includes(query) ||
+                        ((query === 'repeated' || query === 'array') && node.repeated);
+  if (isDirectMatch) return true;
   if (node.children) {
     return node.children.some(child => nodeContainsSearchMatch(child, query));
   }
   return false;
 };
 
-// --- Helper function for use case matching ---
 const nodeContainsKeyField = (node, useCase) => {
-  if (node.keyFieldInfo && node.keyFieldInfo.includes(useCase)) {
-    return true;
-  }
+  if (node.keyFieldInfo && node.keyFieldInfo.includes(useCase)) return true;
   if (node.children) {
     return node.children.some(child => nodeContainsKeyField(child, useCase));
   }
@@ -43,32 +40,28 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
   const query = searchQuery ? searchQuery.toLowerCase() : '';
 
   const isSelected = selectedField === field;
-  const isDirectSearchMatch = query && field.name.toLowerCase().includes(query);
+  
+  const isDirectSearchMatch = query && 
+    (field.name.toLowerCase().includes(query) || 
+    ((query === 'repeated' || query === 'array') && field.repeated));
+    
   const isDirectUseCaseMatch = selectedUseCase && field.keyFieldInfo && field.keyFieldInfo.includes(selectedUseCase);
 
-  // --- Core Logic for Auto-Expansion ---
-  let shouldExpand = false;
-  if (searchQuery) {
-    // If searching, expand if a child contains a search match
-    shouldExpand = hasChildren && field.children.some(child => nodeContainsSearchMatch(child, query));
-  } else if (selectedUseCase) {
-    // If filtering by use case, expand if a child contains a use case match
-    shouldExpand = hasChildren && field.children.some(child => nodeContainsKeyField(child, selectedUseCase));
-  } else {
-    // Otherwise, rely on the user's manual clicks
-    shouldExpand = isManuallyExpanded;
-  }
+  // --- Core Logic for Auto-Expansion (no changes) ---
+  const isAutoExpandedBySearch = searchQuery && hasChildren && field.children.some(child => nodeContainsSearchMatch(child, query));
+  const isAutoExpandedByUseCase = selectedUseCase && hasChildren && field.children.some(child => nodeContainsKeyField(child, selectedUseCase));
+  const shouldExpand = isManuallyExpanded || isAutoExpandedBySearch || isAutoExpandedByUseCase;
 
-  // --- Dynamic Highlighting ---
+  // --- Dynamic Highlighting (THE CHANGE IS HERE) ---
   const selectionClass = isSelected
-    ? 'bg-blue-800'
+    ? 'bg-solarized-orange' // 1. Changed background to orange for selected state
     : isDirectSearchMatch
-    ? 'bg-yellow-800 bg-opacity-40'
+    ? 'bg-solarized-blue bg-opacity-40'
     : isDirectUseCaseMatch
-    ? 'bg-purple-800 bg-opacity-40'
-    : 'hover:bg-gray-700';
+    ? 'bg-solarized-blue bg-opacity-40'
+    : 'hover:bg-solarized-base01';
 
-  // --- Dynamic Filtering ---
+  // Dynamic Filtering (no changes)
   if (searchQuery && !nodeContainsSearchMatch(field, query)) {
     return null;
   }
@@ -88,9 +81,17 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
         }}
       >
         {hasChildren ? <ArrowIcon isExpanded={shouldExpand} /> : <div className="w-5 h-5" />}
-        <div className="ml-2 flex flex-wrap items-baseline">
-          <span className="font-mono text-lg text-cyan-400 mr-4">{field.name}</span>
-          {field.type && <span className="text-sm font-light text-gray-400">({field.type})</span>}
+        <div className="ml-2 flex flex-wrap items-baseline gap-x-2">
+          {/* 2. Text color is now conditional */}
+          <span className={`font-mono text-lg ${isSelected ? 'text-solarized-base03' : 'text-solarized-cyan'}`}>{field.name}</span>
+          {field.type && (
+            <div className="flex items-baseline gap-x-2">
+              <span className={`text-sm font-light ${isSelected ? 'text-solarized-base03' : 'text-solarized-base00'}`}>({field.type})</span>
+              {field.repeated && (
+                <span className={`text-xs font-mono ${isSelected ? 'text-solarized-base03' : 'text-solarized-base01'}`}>[repeated]</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
@@ -101,14 +102,14 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden border-l border-gray-600"
+            className="overflow-hidden border-l border-solarized-base01"
           >
             {field.children.map((child, index) => (
               <UdmField
                 key={`${field.name}-${child.name}-${index}`}
                 field={child}
                 selectedField={selectedField}
-                searchQuery={searchQuery}
+                searchQuery={isManuallyExpanded ? '' : searchQuery}
                 selectedUseCase={selectedUseCase}
                 onSelect={onSelect}
               />
