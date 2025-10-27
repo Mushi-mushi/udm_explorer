@@ -79,7 +79,7 @@ function App() {
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-solarized-base1">Unified Data Model Explorer</h1>
-          <p className="text-solarized-base00">An interactive viewer for the UDM schema. Select a model to explore.</p>
+          <p className="text-solarized-base00">An interactive viewer for the UDM schema.</p>
         </header>
 
         {/* --- Model Toggle Buttons --- */}
