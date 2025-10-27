@@ -10,6 +10,6 @@
     { "name": "vendor_name", "type": "String", "description": "Vendor name of the product." },
     { "name": "product_name", "type": "String", "description": "Product name." },
     { "name": "source_type", "type": "Enum", "description": "The source of the entity.", "enumValues": ["ENTITY_CONTEXT", "DERIVED_CONTEXT", "GLOBAL_CONTEXT"] },
-    { "name": "threat", "type": "SecurityResult", "keyFieldInfo": ["IoC"], "description": "Metadata provided by a threat intelligence feed." }
+    { "name": "threat", "type": "SecurityResult", "repeated": true, "keyFieldInfo": ["IoC"], "description": "Metadata provided by a threat intelligence feed." }
   ]
 }

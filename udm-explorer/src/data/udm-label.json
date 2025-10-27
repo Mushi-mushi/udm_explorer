@@ -1,0 +1,17 @@
+{
+  "name": "label",
+  "type": "Label",
+  "description": "A generic key-value pair.",
+  "children": [
+    {
+      "name": "key",
+      "type": "String",
+      "description": "The key portion of the label."
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "description": "The value portion of the label."
+    }
+  ]
+}

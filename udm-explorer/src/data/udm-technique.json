@@ -1,0 +1,27 @@
+{
+  "name": "technique",
+  "type": "Technique",
+  "description": "Technique information related to an attack or threat.",
+  "children": [
+    {
+      "name": "id",
+      "type": "String",
+      "description": "Technique ID (for example, 'T1595')."
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "description": "Technique Name (for example, 'Active Scanning')."
+    },
+    {
+      "name": "subtechnique_id",
+      "type": "String",
+      "description": "Subtechnique ID (for example, 'T1595.001')."
+    },
+    {
+      "name": "subtechnique_name",
+      "type": "String",
+      "description": "Subtechnique Name (for example, 'Scanning IP Blocks')."
+    }
+  ]
+}

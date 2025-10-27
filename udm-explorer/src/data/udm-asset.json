@@ -1,0 +1,131 @@
+{
+  "name": "asset",
+  "type": "Asset",
+  "description": "Information about a compute asset such as a workstation, laptop, phone, virtual desktop, or VM.",
+  "children": [
+    {
+      "name": "asset_id",
+      "type": "String",
+      "description": "The asset ID. Value must contain the ':' character. For example, cs:abcdd23434."
+    },
+    {
+      "name": "attribute",
+      "type": "Attribute",
+      "description": "Generic entity metadata attributes of the asset."
+    },
+    {
+      "name": "category",
+      "type": "String",
+      "description": "The category of the asset (for example, 'End User Asset', 'Workstation', 'Server')."
+    },
+    {
+      "name": "creation_time",
+      "type": "Timestamp",
+      "description": "Time the asset was created or provisioned. Deprecated: use Attribute instead."
+    },
+    {
+      "name": "deployment_status",
+      "type": "Enum",
+      "description": "The deployment status of the asset for device lifecycle purposes.",
+      "enumValues": ["ACTIVE", "INACTIVE", "IN_REPAIR", "MISSING", "STOLEN", "RETIRED"]
+    },
+    {
+      "name": "first_discover_time",
+      "type": "Timestamp",
+      "description": "Time the asset was first discovered by asset management/discoverability software."
+    },
+    {
+      "name": "first_seen_time",
+      "type": "Timestamp",
+      "description": "The first observed time for an asset, calculated based on the first time the identifier was observed."
+    },
+    {
+      "name": "hardware",
+      "type": "Hardware",
+      "repeated": true,
+      "description": "The asset hardware specifications."
+    },
+    {
+      "name": "hostname",
+      "type": "String",
+      "description": "Asset hostname or domain name field."
+    },
+    {
+      "name": "ip",
+      "type": "String",
+      "repeated": true,
+      "description": "A list of IP addresses associated with an asset."
+    },
+    {
+      "name": "labels",
+      "type": "Label",
+      "repeated": true,
+      "description": "Metadata labels for the asset. Deprecated: use Attribute instead."
+    },
+    {
+      "name": "last_boot_time",
+      "type": "Timestamp",
+      "description": "Time the asset was last boot started."
+    },
+    {
+      "name": "last_discover_time",
+      "type": "Timestamp",
+      "description": "Time the asset was last discovered by asset management/discoverability software."
+    },
+    {
+      "name": "location",
+      "type": "Location",
+      "description": "Location of the asset."
+    },
+    {
+      "name": "mac",
+      "type": "String",
+      "repeated": true,
+      "description": "List of MAC addresses associated with an asset."
+    },
+    {
+      "name": "nat_ip",
+      "type": "String",
+      "repeated": true,
+      "description": "List of NAT IP addresses associated with an asset."
+    },
+    {
+      "name": "network_domain",
+      "type": "String",
+      "description": "The network domain of the asset (for example, 'corp.acme.com')."
+    },
+    {
+      "name": "platform_software",
+      "type": "PlatformSoftware",
+      "description": "The asset operating system platform software."
+    },
+    {
+      "name": "product_object_id",
+      "type": "String",
+      "description": "A vendor-specific identifier to uniquely identify the entity (a GUID or similar)."
+    },
+    {
+      "name": "software",
+      "type": "Software",
+      "repeated": true,
+      "description": "The asset software details."
+    },
+    {
+      "name": "system_last_update_time",
+      "type": "Timestamp",
+      "description": "Time the asset system or OS was last updated."
+    },
+    {
+      "name": "type",
+      "type": "Enum",
+      "description": "The type of asset (for example, workstation, laptop, server).",
+      "enumValues": ["BARE_METAL_HOST", "ENDPOINT", "FIREWALL", "LOAD_BALANCER", "MOBILE_DEVICE", "NETWORK_DEVICE", "ROUTER", "SERVER", "SNIFFER", "STORAGE", "SWITCH", "VIRTUAL_MACHINE", "WORKSTATION"]
+    },
+    {
+      "name": "vulnerabilities",
+      "type": "Vulnerability",
+      "repeated": true,
+      "description": "Vulnerabilities discovered on asset."
+    }
+  ]
+}

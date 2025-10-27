@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Helper function for search matching ---
 const nodeContainsSearchMatch = (node, query) => {
-  if (node.name.toLowerCase().includes(query)) {
-    return true;
-  }
+  const isDirectMatch = node.name.toLowerCase().includes(query) ||
+                        ((query === 'repeated' || query === 'array') && node.repeated);
+  if (isDirectMatch) return true;
   if (node.children) {
     return node.children.some(child => nodeContainsSearchMatch(child, query));
   }
@@ -15,9 +15,7 @@ const nodeContainsSearchMatch = (node, query) => {
 
 // --- Helper function for use case matching ---
 const nodeContainsKeyField = (node, useCase) => {
-  if (node.keyFieldInfo && node.keyFieldInfo.includes(useCase)) {
-    return true;
-  }
+  if (node.keyFieldInfo && node.keyFieldInfo.includes(useCase)) return true;
   if (node.children) {
     return node.children.some(child => nodeContainsKeyField(child, useCase));
   }
@@ -43,23 +41,18 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
   const query = searchQuery ? searchQuery.toLowerCase() : '';
 
   const isSelected = selectedField === field;
-  const isDirectSearchMatch = query && field.name.toLowerCase().includes(query);
+  
+  const isDirectSearchMatch = query && 
+    (field.name.toLowerCase().includes(query) || 
+    ((query === 'repeated' || query === 'array') && field.repeated));
+    
   const isDirectUseCaseMatch = selectedUseCase && field.keyFieldInfo && field.keyFieldInfo.includes(selectedUseCase);
 
   // --- Core Logic for Auto-Expansion ---
-  let shouldExpand = false;
-  if (searchQuery) {
-    // If searching, expand if a child contains a search match
-    shouldExpand = hasChildren && field.children.some(child => nodeContainsSearchMatch(child, query));
-  } else if (selectedUseCase) {
-    // If filtering by use case, expand if a child contains a use case match
-    shouldExpand = hasChildren && field.children.some(child => nodeContainsKeyField(child, selectedUseCase));
-  } else {
-    // Otherwise, rely on the user's manual clicks
-    shouldExpand = isManuallyExpanded;
-  }
+  const isAutoExpandedBySearch = searchQuery && hasChildren && field.children.some(child => nodeContainsSearchMatch(child, query));
+  const isAutoExpandedByUseCase = selectedUseCase && hasChildren && field.children.some(child => nodeContainsKeyField(child, selectedUseCase));
+  const shouldExpand = isManuallyExpanded || isAutoExpandedBySearch || isAutoExpandedByUseCase;
 
-  // --- Dynamic Highlighting ---
   const selectionClass = isSelected
     ? 'bg-blue-800'
     : isDirectSearchMatch
@@ -88,9 +81,16 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
         }}
       >
         {hasChildren ? <ArrowIcon isExpanded={shouldExpand} /> : <div className="w-5 h-5" />}
-        <div className="ml-2 flex flex-wrap items-baseline">
-          <span className="font-mono text-lg text-cyan-400 mr-4">{field.name}</span>
-          {field.type && <span className="text-sm font-light text-gray-400">({field.type})</span>}
+        <div className="ml-2 flex flex-wrap items-baseline gap-x-2">
+          <span className="font-mono text-lg text-cyan-400">{field.name}</span>
+          {field.type && (
+            <div className="flex items-baseline gap-x-2">
+              <span className="text-sm font-light text-gray-400">({field.type})</span>
+              {field.repeated && (
+                <span className="text-xs font-mono text-gray-500">[repeated]</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
@@ -108,7 +108,8 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
                 key={`${field.name}-${child.name}-${index}`}
                 field={child}
                 selectedField={selectedField}
-                searchQuery={searchQuery}
+                // --- THE FIX: If this node was manually expanded, stop filtering its children ---
+                searchQuery={isManuallyExpanded ? '' : searchQuery}
                 selectedUseCase={selectedUseCase}
                 onSelect={onSelect}
               />
