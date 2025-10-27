@@ -1,47 +1,19 @@
 {
   "name": "metadata",
   "type": "Metadata",
-  "description": "Provides essential information about the event, such as the timestamp, event type, and product details.",
+  "description": "General information associated with a UDM event.",
   "children": [
-    {
-      "name": "event_timestamp",
-      "type": "Timestamp",
-      "description": "The time at which the event occurred. This field is required."
-    },
-    {
-      "name": "ingested_timestamp",
-      "type": "Timestamp",
-      "description": "The time the event was ingested into the security platform."
-    },
-    {
-      "name": "event_type",
-      "type": "Enum",
-      "description": "The type of event, such as PROCESS_LAUNCH or USER_LOGIN. This determines which other fields are required."
-    },
-    {
-      "name": "vendor_name",
-      "type": "String",
-      "description": "The name of the vendor that generated the event (e.g., 'Microsoft')."
-    },
-    {
-      "name": "product_name",
-      "type": "String",
-      "description": "The name of the product that generated the event (e.g., 'Sysmon')."
-    },
-    {
-      "name": "product_version",
-      "type": "String",
-      "description": "The version of the product."
-    },
-    {
-      "name": "product_event_id",
-      "type": "String",
-      "description": "The original event ID from the source product."
-    },
-    {
-      "name": "description",
-      "type": "String",
-      "description": "A summary or description of the event."
-    }
+    { "name": "event_timestamp", "type": "Timestamp", "keyFieldInfo": ["Indexing"], "description": "The GMT timestamp when the event was generated.", "logstashMapping": "date {\n\tmatch => [\"timestamp_field\", \"ISO8601\"]\n\ttarget => \"%%PATH%%\"\n}" },
+    { "name": "event_type", "type": "Enum", "keyFieldInfo": ["Curated detections", "Indexing"], "description": "The event type.", "enumValues": ["GENERIC_EVENT", "NETWORK_CONNECTION", "PROCESS_LAUNCH", "USER_LOGIN"] },
+    { "name": "vendor_name", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing"], "description": "The name of the product vendor.", "logstashMapping": "mutate {\n\trename => { \"source_vendor_field\" => \"%%PATH%%\" }\n}" },
+    { "name": "product_name", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing"], "description": "The name of the product.", "logstashMapping": "mutate {\n\trename => { \"source_product_field\" => \"%%PATH%%\" }\n}" },
+    { "name": "product_log_id", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "A vendor-specific event identifier." },
+    { "name": "product_event_type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "A product-specific event name or type." },
+    { "name": "product_deployment_id", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The deployment identifier assigned by the vendor for a product deployment." },
+    { "name": "description", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "A human-readable description of the event." },
+    { "name": "ingestion_labels", "type": "Label", "description": "User-configured ingestion metadata labels.", "children": [
+      { "name": "key", "type": "String", "keyFieldInfo": ["Curated detections"] },
+      { "name": "value", "type": "String", "keyFieldInfo": ["Curated detections"] }
+    ]}
   ]
 }

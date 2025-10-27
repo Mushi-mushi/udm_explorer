@@ -1,0 +1,15 @@
+{
+  "name": "metadata",
+  "type": "EntityMetadata",
+  "description": "Information about the Entity and the product where the entity was created.",
+  "children": [
+    { "name": "collected_timestamp", "type": "Timestamp", "keyFieldInfo": ["Entity graph", "IoC"], "description": "GMT timestamp when the entity information was collected." },
+    { "name": "creation_timestamp", "type": "Timestamp", "description": "GMT timestamp when the entity described by the product_entity_id was created." },
+    { "name": "entity_type", "type": "Enum", "description": "Entity type.", "enumValues": ["ASSET", "DOMAIN_NAME", "FILE", "GROUP", "IP_ADDRESS", "RESOURCE", "USER"] },
+    { "name": "product_entity_id", "type": "String", "description": "A vendor-specific identifier that uniquely identifies the entity." },
+    { "name": "vendor_name", "type": "String", "description": "Vendor name of the product." },
+    { "name": "product_name", "type": "String", "description": "Product name." },
+    { "name": "source_type", "type": "Enum", "description": "The source of the entity.", "enumValues": ["ENTITY_CONTEXT", "DERIVED_CONTEXT", "GLOBAL_CONTEXT"] },
+    { "name": "threat", "type": "SecurityResult", "keyFieldInfo": ["IoC"], "description": "Metadata provided by a threat intelligence feed." }
+  ]
+}
