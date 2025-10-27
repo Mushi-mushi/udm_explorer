@@ -1,0 +1,38 @@
+{
+  "name": "network",
+  "type": "Network",
+  "description": "A network event.",
+  "children": [
+    { "name": "application_protocol", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The application protocol." },
+    { "name": "ip_protocol", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The IP protocol." },
+    { "name": "dns_domain", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "DNS domain name." },
+    { "name": "dns", "type": "Dns", "description": "DNS info.", "children": [
+      { "name": "questions", "type": "DnsQuestion", "description": "DNS query questions.", "children": [
+        { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The domain name being queried." },
+        { "name": "type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The type of DNS record being queried." }
+      ]},
+      { "name": "answers", "type": "DnsAnswer", "description": "DNS query answers.", "children": [
+        { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The domain name in the answer." },
+        { "name": "type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The type of DNS record in the answer." },
+        { "name": "data", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The data in the answer, such as an IP address." }
+      ]}
+    ]},
+    { "name": "http", "type": "Http", "description": "HTTP info.", "children": [
+      { "name": "method", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The HTTP method (e.g., GET, POST)." },
+      { "name": "user_agent", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The User-Agent string from the HTTP request." },
+      { "name": "referral_url", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The referring URL." },
+      { "name": "response_code", "type": "Integer", "keyFieldInfo": ["Threat hunting"], "description": "The HTTP response code." }
+    ]},
+    { "name": "email", "type": "Email", "description": "Email info.", "children": [
+      { "name": "from", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The sender's email address." },
+      { "name": "to", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The recipient's email address." },
+      { "name": "cc", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "Carbon-copied email addresses." },
+      { "name": "bcc", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "Blind carbon-copied email addresses." },
+      { "name": "subject", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The email subject line." },
+      { "name": "reply_to", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The reply-to email address." }
+    ]},
+    { "name": "ftp", "type": "Ftp", "description": "FTP info.", "children": [
+      { "name": "command", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The FTP command." }
+    ]}
+  ]
+}

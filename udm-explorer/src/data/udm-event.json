@@ -1,56 +1,16 @@
 {
   "name": "Event",
-  "description": "The root of the Unified Data Model event structure.",
+  "description": "A UDM event.",
   "children": [
-    {
-      "name": "metadata",
-      "type": "Metadata",
-      "description": "Provides essential information about the event, such as the timestamp, event type, and product details."
-    },
-    {
-      "name": "principal",
-      "type": "Noun",
-      "description": "The primary acting noun in the event. It represents the entity that performed the action."
-    },
-    {
-      "name": "target",
-      "type": "Noun",
-      "description": "The noun that was acted upon in the event. This is the entity that was the target of the action."
-    },
-    {
-      "name": "src",
-      "type": "Noun",
-      "description": "The source noun of the event, often used in network-related activities to represent the origin of a connection."
-    },
-    {
-      "name": "observer",
-      "type": "Noun",
-      "description": "The noun that observed the event, such as a monitoring agent or network sensor."
-    },
-    {
-      "name": "intermediate",
-      "type": "Noun",
-      "description": "Represents any intermediary nouns in the event, such as proxies or relays."
-    },
-    {
-      "name": "about",
-      "type": "Noun",
-      "description": "The noun that the event is about, providing context when the other noun fields are not sufficient."
-    },
-    {
-      "name": "security_result",
-      "type": "SecurityResult",
-      "description": "Contains details about security-related outcomes, such as classifications, severity, and threat information."
-    },
-    {
-      "name": "network",
-      "type": "Network",
-      "description": "Holds data related to network activity, including protocols, traffic details, and session information."
-    },
-    {
-      "name": "extensions",
-      "type": "Extensions",
-      "description": "A flexible field to store additional, non-standard information from the original log."
-    }
+    { "name": "metadata", "type": "Metadata", "description": "Event metadata such as timestamp, source product, etc." },
+    { "name": "principal", "type": "Noun", "description": "Represents the source of activity in the event." },
+    { "name": "target", "type": "Noun", "description": "Represents a target entity being referenced by the event." },
+    { "name": "src", "type": "Noun", "description": "Represents a source entity being acted upon by the participant." },
+    { "name": "observer", "type": "Noun", "description": "Represents an observer entity which is not a direct intermediary." },
+    { "name": "intermediary", "type": "Noun", "description": "Represents details on one or more intermediate entities processing activity." },
+    { "name": "about", "type": "Noun", "description": "Represents entities referenced by the event that are not otherwise described." },
+    { "name": "security_result", "type": "SecurityResult", "description": "A list of security results." },
+    { "name": "network", "type": "Network", "description": "All network details." },
+    { "name": "extensions", "type": "Extensions", "description": "All other first-class, event-specific metadata." }
   ]
 }
