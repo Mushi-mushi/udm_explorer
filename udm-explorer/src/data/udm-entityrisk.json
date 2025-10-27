@@ -1,0 +1,18 @@
+{
+  "name": "entity_risk",
+  "type": "EntityRisk",
+  "description": "Stores information related to the risk score of an entity.",
+  "children": [
+    { "name": "DEPRECATED_risk_score", "type": "Integer", "description": "Deprecated risk score." },
+    { "name": "detections_count", "type": "Integer", "description": "Number of detections that make up the risk score within the time window." },
+    { "name": "first_detection_time", "type": "Timestamp", "description": "Timestamp of the first detection within the specified time window." },
+    { "name": "last_detection_time", "type": "Timestamp", "description": "Timestamp of the last detection within the specified time window." },
+    { "name": "normalized_risk_score", "type": "Integer", "description": "Normalized risk score for the entity. This value is between 0-1000." },
+    { "name": "raw_risk_delta", "type": "RiskDelta", "description": "The change in raw risk score for an entity between time windows." },
+    { "name": "risk_delta", "type": "RiskDelta", "description": "The change in normalized risk score for an entity between time windows." },
+    { "name": "risk_score", "type": "Float", "description": "Raw risk score for the entity." },
+    { "name": "risk_version", "type": "String", "description": "Version of the risk score calculation algorithm." },
+    { "name": "risk_window", "type": "Interval", "description": "Time window used when computing the risk score for an entity." },
+    { "name": "risk_window_size", "type": "String", "description": "Risk window duration for the Entity (e.g., '86400s')." }
+  ]
+}

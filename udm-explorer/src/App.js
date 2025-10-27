@@ -20,6 +20,8 @@ import udmTactic from './data/udm-tactic.json';
 import udmTechnique from './data/udm-technique.json';
 import udmLabel from './data/udm-label.json'; 
 import udmFile from './data/udm-file.json';
+import udmEntityRisk from './data/udm-entityrisk.json'; 
+import udmRiskDelta from './data/udm-riskdelta.json';  
 
 // --- Type-to-Template Mapping ---
 const templateMap = {
@@ -37,6 +39,8 @@ const templateMap = {
   'Technique': udmTechnique?.children, 
   'Label': udmLabel?.children, 
   'File': udmFile?.children,
+  'EntityRisk': udmEntityRisk?.children, 
+  'RiskDelta': udmRiskDelta?.children,   
 };
 
 // --- Data Hydration Function (with Recursion Guard) ---

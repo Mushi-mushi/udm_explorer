@@ -1,0 +1,27 @@
+{
+  "name": "risk_delta",
+  "type": "RiskDelta",
+  "description": "Describes the difference in risk score between two points in time.",
+  "children": [
+    {
+      "name": "previous_range_end_time",
+      "type": "Timestamp",
+      "description": "End time of the previous time window."
+    },
+    {
+      "name": "previous_risk_score",
+      "type": "Integer",
+      "description": "Risk score from the previous risk window."
+    },
+    {
+      "name": "risk_score_delta",
+      "type": "Integer",
+      "description": "Difference in the normalized risk score from the previous recorded value."
+    },
+    {
+      "name": "risk_score_numeric_delta",
+      "type": "Integer",
+      "description": "Numeric change between the current and previous risk score."
+    }
+  ]
+}
