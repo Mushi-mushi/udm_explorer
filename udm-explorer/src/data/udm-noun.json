@@ -1,83 +1,57 @@
 {
   "name": "Noun",
   "type": "Noun",
-  "description": "Represents the different entities in an event.",
+  "description": "Represents the different entities in an event: principal, src, target, observer, intermediary, and about. It stores attributes known about the entity.",
   "children": [
-    { "name": "hostname", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing", "Asset aliasing", "IoC", "Entity graph"], "description": "Hostname or domain name field." },
-    { "name": "ip", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing", "Artifact aliasing", "Asset aliasing", "Entity graph"], "description": "A list of IP addresses." },
-    { "name": "mac", "type": "String", "keyFieldInfo": ["Indexing", "Asset aliasing", "Entity graph"], "description": "List of MAC addresses." },
+    { "name": "administrative_domain", "type": "String", "description": "Domain which the device belongs to (for example, the Microsoft Windows domain)." },
+    { "name": "application", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The name of an application or service." },
+    { "name": "artifact", "type": "Artifact", "description": "Artifacts are pieces of contextual data about entities, such as files, domains, or IP addresses." },
+    { "name": "asset", "type": "Asset", "description": "Information about the asset." },
     { "name": "asset_id", "type": "String", "keyFieldInfo": ["Indexing", "Asset aliasing"], "description": "The asset ID." },
-    { "name": "port", "type": "Integer", "keyFieldInfo": ["Curated detections"], "description": "Network port number." },
-    { "name": "application", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "Name of an application or service." },
-    { "name": "user", "type": "User", "description": "Information about the user.", "children": [
-      { "name": "userid", "type": "String", "keyFieldInfo": ["Indexing", "User aliasing", "Entity graph"], "description": "The ID of the user." },
-      { "name": "email_address", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing", "User aliasing", "Entity graph", "IoC"], "description": "User's email address." },
-      { "name": "windows_sid", "type": "String", "keyFieldInfo": ["Indexing", "User aliasing", "Entity graph"], "description": "The Windows SID of the user." },
-      { "name": "product_object_id", "type": "String", "keyFieldInfo": ["Indexing", "User aliasing", "Entity graph", "IoC"], "description": "A product-specific identifier for the user." },
-      { "name": "employee_id", "type": "String", "keyFieldInfo": ["Entity graph"], "description": "Human capital management identifier." },
-      { "name": "attribute", "type": "Attribute", "children": [
-        { "name": "permissions", "type": "Permission", "children": [
-          { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"] },
-          { "name": "type", "type": "String", "keyFieldInfo": ["Curated detections"] }
-        ]},
-        { "name": "roles", "type": "Role", "children": [
-          { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"] },
-          { "name": "description", "type": "String", "keyFieldInfo": ["Curated detections"] }
-        ]}
-      ]}
-    ]},
-    { "name": "process", "type": "Process", "description": "Information about the process.", "children": [
-      { "name": "pid", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The process ID." },
-      { "name": "command_line", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The command line that created the process." },
-      { "name": "file", "type": "File", "description": "The process's executable file.", "children": [
-        { "name": "full_path", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "Full path of the executable." }
-      ]},
-      { "name": "parent_process", "type": "Process", "keyFieldInfo": ["Process aliasing"], "description": "The parent process.", "children": [
-        { "name": "command_line", "type": "String", "keyFieldInfo": ["Curated detections"] },
-        { "name": "file", "type": "File", "children": [
-          { "name": "full_path", "type": "String", "keyFieldInfo": ["Curated detections"] }
-        ]}
-      ]},
-      { "name": "product_specific_process_id", "type": "String", "keyFieldInfo": ["Process aliasing"], "description": "A product specific process id." }
-    ]},
-    { "name": "file", "type": "File", "keyFieldInfo": ["Entity graph"], "description": "Information about the file.", "children": [
-      { "name": "full_path", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The full path of the file." },
-      { "name": "md5", "type": "String", "keyFieldInfo": ["Artifact aliasing"], "description": "MD5 hash of the file." },
-      { "name": "sha1", "type": "String", "keyFieldInfo": ["Artifact aliasing"], "description": "SHA1 hash of the file." },
-      { "name": "sha256", "type": "String", "keyFieldInfo": ["Artifact aliasing"], "description": "SHA256 hash of the file." }
-    ]},
-    { "name": "registry", "type": "Registry", "description": "Registry information.", "children": [
-      { "name": "registry_key", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "Registry key path." },
-      { "name": "registry_value_name", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "Name of the registry value." }
-    ]},
-    { "name": "resource", "type": "Resource", "description": "Information about a resource.", "children": [
-      { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections", "IoC"], "description": "The full name of the resource." },
-      { "name": "resource_type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "Resource type." },
-      { "name": "product_object_id", "type": "String", "keyFieldInfo": ["Entity graph", "IoC"], "description": "Product-specific identifier for the resource." },
-      { "name": "attribute", "type": "Attribute", "children": [
-        { "name": "cloud", "type": "Cloud", "children": [
-          { "name": "project", "type": "Project", "children": [
-            { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"] },
-            { "name": "resource_subtype", "type": "String", "keyFieldInfo": ["Curated detections"] }
-          ]}
-        ]}
-      ]}
-    ]},
-    { "name": "asset", "type": "Asset", "description": "Information about the asset.", "children": [
-      { "name": "hostname", "type": "String", "keyFieldInfo": ["Indexing", "Entity graph"] },
-      { "name": "asset_id", "type": "String", "keyFieldInfo": ["Indexing", "Entity graph"] },
-      { "name": "ip", "type": "String", "keyFieldInfo": ["Indexing", "Entity graph"] },
-      { "name": "mac", "type": "String", "keyFieldInfo": ["Indexing", "Entity graph"] },
-      { "name": "product_object_id", "type": "String", "keyFieldInfo": ["Entity graph", "IoC"] }
-    ]},
-    { "name": "group", "type": "Group", "description": "Information about the group.", "children": [
-      { "name": "email_address", "type": "String", "keyFieldInfo": ["Entity graph"] },
-      { "name": "windows_sid", "type": "String", "keyFieldInfo": ["Entity graph"] },
-      { "name": "product_object_id", "type": "String", "keyFieldInfo": ["Entity graph", "IoC"] }
-    ]},
+    { "name": "cloud", "type": "Cloud", "description": "Cloud metadata. Deprecated: use entity Attribute instead." },
+    { "name": "domain", "type": "Domain", "description": "Information about the domain." },
+    { "name": "email", "type": "String", "description": "Email address. Only filled in for security_result.about" },
+    { "name": "file", "type": "File", "keyFieldInfo": ["Entity graph"], "description": "Information about the file." },
+    { "name": "group", "type": "Group", "description": "Information about the group." },
+    { "name": "hostname", "type": "String", "keyFieldInfo": ["Curated detections", "Indexing", "Asset aliasing", "IoC", "Entity graph"], "description": "Client hostname or domain name field." },
+    { "name": "investigation", "type": "Investigation", "description": "Analyst feedback/investigation for alerts." },
+    { "name": "ip", "type": "String", "repeated": true, "keyFieldInfo": ["Curated detections", "Indexing", "Artifact aliasing", "Asset aliasing", "Entity graph"], "description": "A list of IP addresses associated with a network connection." },
+    { "name": "ip_geo_artifact", "type": "Artifact", "repeated": true, "description": "Enriched geographic information corresponding to an IP address." },
+    { "name": "labels", "type": "Label", "repeated": true, "description": "Labels are key-value pairs. Deprecated: use entity Attribute instead." },
+    { "name": "location", "type": "Location", "description": "Physical location. For cloud environments, set the region in location.name." },
+    { "name": "mac", "type": "String", "repeated": true, "keyFieldInfo": ["Indexing", "Asset aliasing", "Entity graph"], "description": "List of MAC addresses associated with a device." },
+    { "name": "namespace", "type": "String", "description": "Namespace which the device belongs to, such as an AD forest." },
+    { "name": "nat_ip", "type": "String", "repeated": true, "description": "A list of NAT translated IP addresses." },
+    { "name": "nat_port", "type": "Integer", "description": "NAT external network port number." },
+    { "name": "network", "type": "Network", "description": "Network details, including sub-messages with details on each protocol." },
+    {
+      "name": "platform",
+      "type": "Enum",
+      "description": "Operating system platform.",
+      "enumValues": [
+        "ANDROID",
+        "CHROME_OS",
+        "IOS",
+        "LINUX",
+        "MAC",
+        "WINDOWS",
+        "UNKNOWN_PLATFORM",
+        "AWS",
+        "AZURE",
+        "GCP"
+      ]
+    },
+    { "name": "platform_patch_level", "type": "String", "description": "Platform patch level." },
+    { "name": "platform_version", "type": "String", "description": "Platform version." },
+    { "name": "port", "type": "Integer", "keyFieldInfo": ["Curated detections"], "description": "Source or destination network port number." },
+    { "name": "process", "type": "Process", "description": "Information about the process." },
+    { "name": "process_ancestors", "type": "Process", "repeated": true, "description": "Information about the process's ancestors ordered from immediate parent to root." },
+    { "name": "registry", "type": "Registry", "description": "Registry information." },
+    { "name": "resource", "type": "Resource", "description": "Information about a resource (e.g., scheduled task, calendar entry)." },
+    { "name": "resource_ancestors", "type": "Resource", "repeated": true, "description": "Information about the resource's ancestors ordered from immediate parent." },
+    { "name": "security_result", "type": "SecurityResult", "repeated": true, "description": "A list of security results." },
     { "name": "url", "type": "String", "keyFieldInfo": ["Curated detections", "Threat hunting", "Entity graph"], "description": "The URL." },
-    { "name": "cloud", "type": "Cloud", "description": "Cloud metadata.", "children": [
-      { "name": "environment", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The Cloud environment (e.g., GCP, AWS)." }
-    ]}
+    { "name": "user", "type": "User", "description": "Information about the user." },
+    { "name": "user_management_chain", "type": "User", "repeated": true, "description": "Information about the user's management chain (reporting hierarchy)." }
   ]
 }

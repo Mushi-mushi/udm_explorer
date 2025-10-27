@@ -4,51 +4,61 @@
   "description": "Security related metadata for the event. Describes the outcome of a security analysis.",
   "children": [
     { "name": "about", "type": "Noun", "description": "If the security result is about a specific entity (Noun), add it here." },
-    { "name": "action", "type": "Enum", "keyFieldInfo": ["Curated detections"], "description": "Actions taken for this event (repeated).", "enumValues": ["ALLOW", "ALLOW_WITH_MODIFICATION", "BLOCK", "QUARANTINE", "UNKNOWN_ACTION"] },
+    { "name": "action", "type": "Enum", "repeated": true, "keyFieldInfo": ["Curated detections"], "description": "Actions taken for this event.", "enumValues": ["ALLOW", "ALLOW_WITH_MODIFICATION", "BLOCK", "QUARANTINE", "UNKNOWN_ACTION"] },
     { "name": "action_details", "type": "String", "description": "The detail of the action taken as provided by the vendor." },
     { "name": "alert_state", "type": "Enum", "description": "The alerting types of this security result.", "enumValues": ["UNSPECIFIED", "NOT_ALERTING", "ALERTING"] },
-    { "name": "attack_details", "type": "AttackDetails", "description": "MITRE ATT&CK details.", "children": [
-      { "name": "version", "type": "String", "description": "ATT&CK version (e.g. 12.1)." },
-      { "name": "tactics", "type": "Tactic", "description": "Tactics employed (repeated).", "children": [
-        { "name": "id", "type": "String", "description": "Tactic ID (e.g. 'TA0043')." },
-        { "name": "name", "type": "String", "description": "Tactic Name (e.g. 'Reconnaissance')." }
-      ]},
-      { "name": "techniques", "type": "Technique", "description": "Techniques employed (repeated).", "children": [
-        { "name": "id", "type": "String", "description": "Technique ID (e.g. 'T1595')." },
-        { "name": "name", "type": "String", "description": "Technique Name (e.g. 'Active Scanning')." },
-        { "name": "subtechnique_id", "type": "String", "description": "Subtechnique ID (e.g. 'T1595.001')." },
-        { "name": "subtechnique_name", "type": "String", "description": "Subtechnique Name (e.g. 'Scanning IP Blocks')." }
-      ]}
-    ]},
-    { "name": "campaigns", "type": "String", "description": "Campaigns using this IOC threat (repeated)." },
-    { "name": "category", "type": "Enum", "keyFieldInfo": ["Indexing"], "description": "The security category (repeated).", "enumValues": ["ACL_VIOLATION", "AUTH_VIOLATION", "DATA_EXFILTRATION", "EXPLOIT", "MALWARE", "NETWORK_ATTACK", "POLICY_VIOLATION", "SOFTWARE_SUSPICIOUS", "UNKNOWN_CATEGORY"] },
-    { "name": "category_details", "type": "String", "description": "For vendor-specific categories (repeated)." },
+    { "name": "analytics_metadata", "type": "AnalyticsMetadata", "repeated": true, "description": "Stores metadata about each risk analytic metric the rule uses." },
+    { "name": "associations", "type": "Association", "repeated": true, "description": "Associations related to the threat." },
+    { "name": "attack_details", "type": "AttackDetails", "description": "MITRE ATT&CK details." },
+    { "name": "campaigns", "type": "String", "repeated": true, "description": "Campaigns using this IOC threat." },
+    { "name": "category", "type": "Enum", "repeated": true, "keyFieldInfo": ["Indexing"], "description": "The security category.", "enumValues": ["ACL_VIOLATION", "AUTH_VIOLATION", "DATA_AT_REST", "DATA_DESTRUCTION", "DATA_EXFILTRATION", "EXPLOIT", "MAIL_PHISHING", "MAIL_SPAM", "MAIL_SPOOFING", "NETWORK_CATEGORIZED_CONTENT", "NETWORK_COMMAND_AND_CONTROL", "NETWORK_DENIAL_OF_SERVICE", "NETWORK_MALICIOUS", "NETWORK_RECON", "NETWORK_SUSPICIOUS", "PHISHING", "POLICY_VIOLATION", "SOCIAL_ENGINEERING", "SOFTWARE_MALICIOUS", "SOFTWARE_PUA", "SOFTWARE_SUSPICIOUS", "TOR_EXIT_NODE", "UNKNOWN_CATEGORY"] },
+    { "name": "category_details", "type": "String", "repeated": true, "description": "For vendor-specific categories." },
     { "name": "confidence", "type": "Enum", "description": "The confidence level of the result as estimated by the product.", "enumValues": ["UNKNOWN_CONFIDENCE", "LOW_CONFIDENCE", "MEDIUM_CONFIDENCE", "HIGH_CONFIDENCE"] },
     { "name": "confidence_details", "type": "String", "description": "Additional detail with regards to the confidence of a security event." },
     { "name": "confidence_score", "type": "Float", "description": "The confidence score of the security result." },
-    { "name": "description", "type": "String", "keyFieldInfo": ["Indexing"], "description": "A human readable description (e.g. 'user password was wrong')." },
-    { "name": "detection_fields", "type": "Label", "description": "An ordered list of values that represent fields in detections for a security finding (repeated).", "children": [
-      { "name": "key", "type": "String", "keyFieldInfo": ["Curated detections"] },
-      { "name": "value", "type": "String", "keyFieldInfo": ["Curated detections"] }
-    ]},
+    { "name": "description", "type": "String", "keyFieldInfo": ["Indexing"], "description": "A human-readable description (e.g. 'user password was wrong')." },
+    { "name": "detection_fields", "type": "Label", "repeated": true, "description": "An ordered list of values that represent fields in detections for a security finding." },
     { "name": "first_discovered_time", "type": "Timestamp", "description": "First time the IoC threat was discovered in the provider." },
     { "name": "last_discovered_time", "type": "Timestamp", "description": "Last time the IoC was seen in the provider data." },
     { "name": "last_updated_time", "type": "Timestamp", "description": "Last time the IoC threat was updated in the provider." },
+    { "name": "outcomes", "type": "Label", "repeated": true, "description": "A list of outcomes that represent the results of this security finding." },
     { "name": "priority", "type": "Enum", "description": "The priority of the result.", "enumValues": ["UNKNOWN_PRIORITY", "LOW_PRIORITY", "MEDIUM_PRIORITY", "HIGH_PRIORITY"] },
     { "name": "priority_details", "type": "String", "description": "Vendor-specific information about the security result priority." },
     { "name": "risk_score", "type": "Float", "description": "The risk score of the security result." },
+    { "name": "rule_author", "type": "String", "description": "Author of the security rule." },
     { "name": "rule_id", "type": "String", "description": "A vendor-specific ID for a rule." },
+    { "name": "rule_labels", "type": "Label", "repeated": true, "description": "A list of rule labels that can't be captured by the other fields." },
     { "name": "rule_name", "type": "String", "description": "Name of the security rule." },
     { "name": "rule_set", "type": "String", "description": "The result's rule set identifier. (e.g. 'windows-threats')" },
+    { "name": "rule_set_display_name", "type": "String", "description": "The curated detections rule set display name." },
+    { "name": "rule_type", "type": "String", "description": "The type of security rule." },
     { "name": "rule_version", "type": "String", "description": "Version of the security rule." },
-    { "name": "severity", "type": "Enum", "description": "The severity of the result.", "enumValues": ["UNKNOWN_SEVERITY", "INFORMATIONAL", "ERROR", "LOW", "MEDIUM", "HIGH"] },
+    { "name": "ruleset_category_display_name", "type": "String", "description": "The curated detection rule set category display name." },
+    {
+      "name": "severity",
+      "type": "Enum",
+      "description": "The severity of the result.",
+      "enumValues": [
+        "CRITICAL",
+        "ERROR",
+        "HIGH",
+        "INFORMATIONAL",
+        "LOW",
+        "MEDIUM",
+        "NONE",
+        "UNKNOWN_SEVERITY"
+      ]
+    },
     { "name": "severity_details", "type": "String", "description": "Vendor-specific severity." },
     { "name": "summary", "type": "String", "keyFieldInfo": ["Indexing"], "description": "A human readable summary (e.g. 'failed login occurred')." },
+    { "name": "threat_feed_name", "type": "String", "description": "Vendor feed name for a threat indicator feed." },
     { "name": "threat_id", "type": "String", "keyFieldInfo": ["Indexing"], "description": "Vendor-specific ID for a threat." },
-    { "name": "threat_id_namespace", "type": "String", "keyFieldInfo": ["Indexing"], "description": "The namespace for the threat_id to ensure uniqueness." },
-    { "name": "threat_name", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "A vendor-assigned classification common across multiple customers.", "logstashMapping": "mutate {\n\trename => { \"source_threat_name\" => \"%%PATH%%\" }\n}" },
+    { "name": "threat_id_namespace", "type": "String", "description": "The namespace for the threat_id to ensure uniqueness." },
+    { "name": "threat_name", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "A vendor-assigned classification common across multiple customers." },
     { "name": "threat_status", "type": "Enum", "description": "Current status of the threat.", "enumValues": ["THREAT_STATUS_UNSPECIFIED", "ACTIVE", "CLEARED", "FALSE_POSITIVE"] },
+    { "name": "threat_verdict", "type": "ThreatVerdict", "description": "GCTI threat verdict on the security result entity." },
     { "name": "url_back_to_product", "type": "String", "description": "URL that takes the user to the source product console for this event." },
-    { "name": "verdict", "type": "String", "description": "Verdict about the IoC from the provider. (Deprecated)" }
+    { "name": "verdict", "type": "String", "description": "Deprecated. Use VerdictInfo instead." },
+    { "name": "verdict_info", "type": "VerdictInfo", "repeated": true, "description": "Verdict information about the IoC from the provider." }
   ]
 }

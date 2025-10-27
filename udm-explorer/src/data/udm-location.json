@@ -1,0 +1,20 @@
+{
+  "name": "location",
+  "type": "Location",
+  "description": "Information about a physical or logical location.",
+  "children": [
+    { "name": "city", "type": "String", "description": "The city." },
+    { "name": "country_or_region", "type": "String", "description": "The country or region." },
+    { "name": "desk_name", "type": "String", "description": "Desk name or individual location, typically for an employee in an office (for example, 'IN-BLR-BCPC-11-1121D')." },
+    { "name": "floor_name", "type": "String", "description": "Floor name, number, or a combination of the two for a building (for example, '1-A')." },
+    { "name": "name", "type": "String", "description": "Custom location name (for example, building or site name like 'London Office'). For cloud environments, this is the region (for example, 'us-west2')." },
+    { 
+      "name": "region_coordinates", 
+      "type": "LatLng", 
+      "description": "Coordinates for the associated region." 
+    },
+    { "name": "region_latitude", "type": "Float", "description": "Deprecated: use region_coordinates." },
+    { "name": "region_longitude", "type": "Float", "description": "Deprecated: use region_coordinates." },
+    { "name": "state", "type": "String", "description": "The state." }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "attack_details",
+  "type": "AttackDetails",
+  "description": "MITRE ATT&CK details.",
+  "children": [
+    {
+      "name": "tactics",
+      "type": "Tactic",
+      "repeated": true,
+      "description": "Tactics employed."
+    },
+    {
+      "name": "techniques",
+      "type": "Technique",
+      "repeated": true,
+      "description": "Techniques employed."
+    },
+    {
+      "name": "version",
+      "type": "String",
+      "description": "ATT&CK version (for example, 12.1)."
+    }
+  ]
+}

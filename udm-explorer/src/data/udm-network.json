@@ -4,14 +4,35 @@
   "description": "A network event.",
   "children": [
     { "name": "application_protocol", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The application protocol." },
-    { "name": "ip_protocol", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The IP protocol." },
+    {
+      "name": "ip_protocol",
+      "type": "Enum",
+      "keyFieldInfo": ["Curated detections"],
+      "description": "The IP protocol.",
+      "enumValues": [
+        "EIGRP",
+        "ESP",
+        "ETHERIP",
+        "GRE",
+        "ICMP",
+        "ICMP6",
+        "IGMP",
+        "IP6IN4",
+        "PIM",
+        "SCTP",
+        "TCP",
+        "UDP",
+        "UNKNOWN_IP_PROTOCOL",
+        "VRRP"
+      ]
+    },
     { "name": "dns_domain", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "DNS domain name." },
     { "name": "dns", "type": "Dns", "description": "DNS info.", "children": [
-      { "name": "questions", "type": "DnsQuestion", "description": "DNS query questions.", "children": [
+      { "name": "questions", "type": "DnsQuestion", "repeated": true, "description": "DNS query questions.", "children": [
         { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The domain name being queried." },
         { "name": "type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The type of DNS record being queried." }
       ]},
-      { "name": "answers", "type": "DnsAnswer", "description": "DNS query answers.", "children": [
+      { "name": "answers", "type": "DnsAnswer", "repeated": true, "description": "DNS query answers.", "children": [
         { "name": "name", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The domain name in the answer." },
         { "name": "type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "The type of DNS record in the answer." },
         { "name": "data", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The data in the answer, such as an IP address." }
@@ -25,9 +46,9 @@
     ]},
     { "name": "email", "type": "Email", "description": "Email info.", "children": [
       { "name": "from", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The sender's email address." },
-      { "name": "to", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The recipient's email address." },
-      { "name": "cc", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "Carbon-copied email addresses." },
-      { "name": "bcc", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "Blind carbon-copied email addresses." },
+      { "name": "to", "type": "String", "repeated": true, "keyFieldInfo": ["Threat hunting"], "description": "The recipient's email address." },
+      { "name": "cc", "type": "String", "repeated": true, "keyFieldInfo": ["Threat hunting"], "description": "Carbon-copied email addresses." },
+      { "name": "bcc", "type": "String", "repeated": true, "keyFieldInfo": ["Threat hunting"], "description": "Blind carbon-copied email addresses." },
       { "name": "subject", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The email subject line." },
       { "name": "reply_to", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The reply-to email address." }
     ]},

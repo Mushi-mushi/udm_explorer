@@ -3,47 +3,96 @@ import React, { useState, useMemo } from 'react';
 import UdmField from './components/UdmField';
 import DetailsPanel from './components/DetailsPanel';
 
-// Import all data models
+// --- Data Imports ---
 import udmEvent from './data/udm-event.json';
 import udmEntity from './data/udm-entity.json';
-
-// Import all data templates
 import udmMetadata from './data/udm-metadata.json';
 import udmEntityMetadata from './data/udm-entity-metadata.json';
 import udmNoun from './data/udm-noun.json';
 import udmSecurityResult from './data/udm-security_result.json';
 import udmNetwork from './data/udm-network.json';
+import udmLocation from './data/udm-location.json';
+import udmLatLng from './data/udm-latlng.json';
+import udmProcess from './data/udm-process.json'; 
+import udmAsset from './data/udm-asset.json';
+import udmAttackDetails from './data/udm-attackdetails.json'; 
+import udmTactic from './data/udm-tactic.json';             
+import udmTechnique from './data/udm-technique.json';
+import udmLabel from './data/udm-label.json'; 
+import udmFile from './data/udm-file.json';
 
-// --- Data Hydration Function ---
-const hydrateUdmTree = (field, path = []) => {
+// --- Type-to-Template Mapping ---
+const templateMap = {
+  'Metadata': udmMetadata?.children,
+  'EntityMetadata': udmEntityMetadata?.children,
+  'Noun': udmNoun?.children,
+  'SecurityResult': udmSecurityResult?.children,
+  'Network': udmNetwork?.children,
+  'Location': udmLocation?.children,
+  'LatLng': udmLatLng?.children,
+  'Process': udmProcess?.children,
+  'Asset': udmAsset?.children,
+  'AttackDetails': udmAttackDetails?.children,
+  'Tactic': udmTactic?.children,             
+  'Technique': udmTechnique?.children, 
+  'Label': udmLabel?.children, 
+  'File': udmFile?.children,
+};
+
+// --- Data Hydration Function (with Recursion Guard) ---
+const hydrateUdmTree = (field, path = [], parentTypes = []) => {
   let hydratedField = JSON.parse(JSON.stringify(field));
-  let childTemplate = null;
+  const currentType = hydratedField.type;
 
-  if (hydratedField.name === 'metadata' && path.includes('Event')) childTemplate = udmMetadata.children;
-  else if (hydratedField.name === 'metadata' && path.includes('Entity')) childTemplate = udmEntityMetadata.children;
-  else if (hydratedField.name === 'security_result') childTemplate = udmSecurityResult.children;
-  else if (hydratedField.name === 'network') childTemplate = udmNetwork.children;
-  else if (hydratedField.type === 'Noun') childTemplate = udmNoun.children;
+  // --- RECURSION GUARD: THE FIX ---
+  // If the current field's type is already in its own ancestry, stop expanding.
+  if (currentType && parentTypes.includes(currentType)) {
+    // This answers your question: "How can we investigate?"
+    // This warning will appear in your browser's console.
+    console.warn(`Recursion detected: Halting hydration for type '${currentType}' at path: ${path.join(' > ')}`);
+    
+    // We remove the children to ensure the branch stops here.
+    delete hydratedField.children; 
+    return hydratedField;
+  }
 
-  if (childTemplate) hydratedField.children = childTemplate;
+  const childTemplate = templateMap[currentType];
+  
+  // Only add children from the template if none are already defined.
+  if (childTemplate && !hydratedField.children) {
+    hydratedField.children = childTemplate;
+  }
 
+  // Handle logstash mapping replacement
   if (hydratedField.logstashMapping) {
     const fullPath = [...path, hydratedField.name].slice(1);
     const udmPathString = `[udm][${fullPath.join('][')}]`;
     hydratedField.logstashMapping = hydratedField.logstashMapping.replace(/%%PATH%%/g, udmPathString);
   }
 
+  // Recursively process any children
   if (hydratedField.children) {
     const newPath = [...path, hydratedField.name];
-    hydratedField.children = hydratedField.children.map(child => hydrateUdmTree(child, newPath));
+    // Add current type to the ancestry for the next level down.
+    const newParentTypes = currentType ? [...parentTypes, currentType] : parentTypes;
+    hydratedField.children = hydratedField.children.map(child => hydrateUdmTree(child, newPath, newParentTypes));
   }
 
   return hydratedField;
 };
 
 // --- Build Both Data Trees ---
-const eventData = hydrateUdmTree(udmEvent, ['Event']);
-const entityData = hydrateUdmTree(udmEntity, ['Entity']);
+let eventData, entityData;
+try {
+  eventData = hydrateUdmTree(udmEvent, ['Event']);
+  entityData = hydrateUdmTree(udmEntity, ['Entity']);
+} catch (error) {
+  console.error("CRITICAL ERROR: Failed to build UDM data trees.", error);
+  eventData = { name: "Error", description: "Could not load Event data." };
+  entityData = { name: "Error", description: "Could not load Entity data." };
+}
+
+// ... (The rest of your App component remains the same)
 
 // --- Helper function to collect all unique use cases ---
 const collectUseCases = (node, useCaseSet) => {
@@ -102,7 +151,7 @@ function App() {
           </button>
         </div>
 
-        {/* --- Search Input --- */}
+        {/* --- Search Input & Use Case Filters --- */}
         <div className="mb-4 max-w-lg mx-auto">
           <input
             type="text"
@@ -112,8 +161,6 @@ function App() {
             className="w-full px-4 py-2 bg-solarized-base02 text-solarized-base1 rounded-full border-2 border-transparent focus:outline-none focus:border-solarized-cyan"
           />
         </div>
-
-        {/* --- Use Case Filter Buttons --- */}
         <div className="flex justify-center flex-wrap gap-2 mb-8 max-w-3xl mx-auto">
           <button
             onClick={() => setSelectedUseCase('')}

@@ -1,0 +1,44 @@
+name: Deploy UDM Explorer to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build and deploy udm-explorer
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          # point cache at the app's package.json (no lockfile in repo)
+          cache-dependency-path: udm-explorer/package.json
+
+      - name: Install dependencies
+        working-directory: udm-explorer
+        # use npm install when no lockfile is present; faster reproducible builds
+        run: npm install
+
+      - name: Build
+        working-directory: udm-explorer
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: udm-explorer/build

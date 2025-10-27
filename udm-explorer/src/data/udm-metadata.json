@@ -11,7 +11,7 @@
     { "name": "product_event_type", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "A product-specific event name or type." },
     { "name": "product_deployment_id", "type": "String", "keyFieldInfo": ["Threat hunting"], "description": "The deployment identifier assigned by the vendor for a product deployment." },
     { "name": "description", "type": "String", "keyFieldInfo": ["Curated detections"], "description": "A human-readable description of the event." },
-    { "name": "ingestion_labels", "type": "Label", "description": "User-configured ingestion metadata labels.", "children": [
+    { "name": "ingestion_labels", "type": "Label", "repeated": true, "description": "User-configured ingestion metadata labels.", "children": [
       { "name": "key", "type": "String", "keyFieldInfo": ["Curated detections"] },
       { "name": "value", "type": "String", "keyFieldInfo": ["Curated detections"] }
     ]}

@@ -1,0 +1,68 @@
+{
+  "name": "process",
+  "type": "Process",
+  "description": "Information about a process.",
+  "children": [
+    {
+      "name": "access_mask",
+      "type": "String",
+      "description": "A bit mask representing the level of access."
+    },
+    {
+      "name": "command_line",
+      "type": "String",
+      "keyFieldInfo": ["Curated detections"],
+      "description": "The command line command that created the process."
+    },
+    {
+      "name": "command_line_history",
+      "type": "String",
+      "repeated": true,
+      "description": "The command line history of the process."
+    },
+    {
+      "name": "file",
+      "type": "File",
+      "description": "Information about the file in use by the process."
+    },
+    {
+      "name": "integrity_level_rid",
+      "type": "String",
+      "description": "The Microsoft Windows integrity level relative ID (RID) of the process."
+    },
+    {
+      "name": "parent_pid",
+      "type": "String",
+      "description": "Deprecated: use parent_process.pid instead."
+    },
+    {
+      "name": "parent_process",
+      "type": "Process",
+      "keyFieldInfo": ["Process aliasing"],
+      "description": "Information about the parent process."
+    },
+    {
+      "name": "pid",
+      "type": "String",
+      "keyFieldInfo": ["Curated detections"],
+      "description": "The process ID."
+    },
+    {
+      "name": "product_specific_parent_process_id",
+      "type": "String",
+      "description": "Deprecated: use parent_process.product_specific_process_id instead."
+    },
+    {
+      "name": "product_specific_process_id",
+      "type": "String",
+      "keyFieldInfo": ["Process aliasing"],
+      "description": "A product specific process id."
+    },
+    {
+      "name": "token_elevation_type",
+      "type": "Enum",
+      "description": "The elevation type of the process on Microsoft Windows. This determines if any privileges are removed when UAC is enabled.",
+      "enumValues": ["TOKEN_ELEVATION_TYPE_DEFAULT", "TOKEN_ELEVATION_TYPE_FULL", "TOKEN_ELEVATION_TYPE_LIMITED"]
+    }
+  ]
+}

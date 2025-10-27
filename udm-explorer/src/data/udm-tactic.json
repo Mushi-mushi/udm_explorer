@@ -1,0 +1,17 @@
+{
+  "name": "tactic",
+  "type": "Tactic",
+  "description": "Tactic information related to an attack or threat.",
+  "children": [
+    {
+      "name": "id",
+      "type": "String",
+      "description": "Tactic ID (for example, 'TA0043')."
+    },
+    {
+      "name": "name",
+      "type": "String",
+      "description": "Tactic Name (for example, 'Reconnaissance')."
+    }
+  ]
+}

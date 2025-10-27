@@ -1,15 +1,15 @@
 {
   "name": "Event",
-  "description": "A UDM event.",
+  "description": "A UDM event, which describes an action that occurred in your environment.",
   "children": [
     { "name": "metadata", "type": "Metadata", "description": "Event metadata such as timestamp, source product, etc." },
     { "name": "principal", "type": "Noun", "description": "Represents the source of activity in the event." },
     { "name": "target", "type": "Noun", "description": "Represents a target entity being referenced by the event." },
     { "name": "src", "type": "Noun", "description": "Represents a source entity being acted upon by the participant." },
     { "name": "observer", "type": "Noun", "description": "Represents an observer entity which is not a direct intermediary." },
-    { "name": "intermediary", "type": "Noun", "description": "Represents details on one or more intermediate entities processing activity." },
-    { "name": "about", "type": "Noun", "description": "Represents entities referenced by the event that are not otherwise described." },
-    { "name": "security_result", "type": "SecurityResult", "description": "A list of security results." },
+    { "name": "intermediary", "type": "Noun", "repeated": true, "description": "Represents details on one or more intermediate entities processing activity." },
+    { "name": "about", "type": "Noun", "repeated": true, "description": "Represents entities referenced by the event that are not otherwise described." },
+    { "name": "security_result", "type": "SecurityResult", "repeated": true, "description": "A list of security results." },
     { "name": "network", "type": "Network", "description": "All network details." },
     { "name": "extensions", "type": "Extensions", "description": "All other first-class, event-specific metadata." }
   ]

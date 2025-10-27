@@ -6,6 +6,6 @@
     { "name": "entity", "type": "Noun", "description": "Noun in the UDM event that this entity represents." },
     { "name": "risk_score", "type": "EntityRisk", "description": "Stores information related to the entity's risk score." },
     { "name": "metric", "type": "Metric", "description": "Stores statistical metrics about the entity." },
-    { "name": "relations", "type": "Relation", "description": "One or more relationships between the entity and other entities." }
+    { "name": "relations", "type": "Relation", "repeated": true, "description": "One or more relationships between the entity and other entities." }
   ]
 }
