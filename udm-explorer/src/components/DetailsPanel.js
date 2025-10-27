@@ -7,7 +7,7 @@ const DetailsPanel = ({ field }) => {
     <motion.div
       layout
       transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-      className="bg-gray-800 rounded-xl p-6 shadow-lg sticky top-8"
+      className="bg-solarized-base02 rounded-xl p-6 shadow-lg sticky top-8"
     >
       <AnimatePresence mode="wait">
         {!field ? (
@@ -16,7 +16,7 @@ const DetailsPanel = ({ field }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center text-gray-400"
+            className="text-center text-solarized-base00"
           >
             Select a field to see its details.
           </motion.div>
@@ -31,20 +31,20 @@ const DetailsPanel = ({ field }) => {
           >
             {/* --- Main Details Section --- */}
             <div>
-              <h2 className="font-mono text-2xl text-cyan-400">{field.name}</h2>
+              <h2 className="font-mono text-2xl text-solarized-cyan">{field.name}</h2>
               {field.type && (
-                <p className="text-gray-400 mt-2">Type: {field.type}</p>
+                <p className="text-solarized-base00 mt-2">Type: {field.type}</p>
               )}
-              <p className="text-gray-300 mt-4 break-normal">{field.description}</p>
+              <p className="text-solarized-base0 mt-4 break-normal">{field.description}</p>
             </div>
 
             {/* --- Key Field Use Cases Section (Conditional) --- */}
             {field.keyFieldInfo && field.keyFieldInfo.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-200 mb-3">Key Field Use Cases</h3>
+                <h3 className="text-xl font-bold text-solarized-base1 mb-3">Key Field Use Cases</h3>
                 <div className="flex flex-wrap gap-2">
                   {field.keyFieldInfo.map(useCase => (
-                    <span key={useCase} className="bg-purple-800 text-purple-200 font-mono text-xs px-2 py-1 rounded-full">
+                    <span key={useCase} className="bg-solarized-cyan text-solarized-base03 font-mono text-xs px-2 py-1 rounded-full">
                       {useCase}
                     </span>
                   ))}
@@ -55,8 +55,8 @@ const DetailsPanel = ({ field }) => {
             {/* --- Logstash Mapping Section (Conditional) --- */}
             {field.logstashMapping && (
               <div>
-                <h3 className="text-xl font-bold text-gray-200 mb-2">Logstash Mapping</h3>
-                <pre className="bg-gray-900 text-green-400 p-4 rounded-md text-sm overflow-x-auto">
+                <h3 className="text-xl font-bold text-solarized-base1 mb-2">Logstash Mapping</h3>
+                <pre className="bg-solarized-base03 text-solarized-blue p-4 rounded-md text-sm overflow-x-auto">
                   <code>{field.logstashMapping}</code>
                 </pre>
               </div>
@@ -65,10 +65,10 @@ const DetailsPanel = ({ field }) => {
             {/* --- Enum Values Section (Conditional) --- */}
             {field.enumValues && field.enumValues.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-200 mb-3">Acceptable Values</h3>
+                <h3 className="text-xl font-bold text-solarized-base1 mb-3">Acceptable Values</h3>
                 <div className="flex flex-wrap gap-2">
                   {field.enumValues.map(value => (
-                    <span key={value} className="bg-gray-700 text-cyan-300 font-mono text-xs px-2 py-1 rounded-full">
+                    <span key={value} className="bg-solarized-base01 text-solarized-base03 font-mono text-xs px-2 py-1 rounded-full">
                       {value}
                     </span>
                   ))}
