@@ -2,7 +2,28 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DetailsPanel = ({ field }) => {
+const DetailsPanel = ({ field, fullPath }) => {
+  // --- NEW: Function to format the path ---
+  const formatPath = (path) => {
+    if (!path) return '';
+    const parts = path.split('.');
+
+    // If we have something like "event.Event...", proceed
+    if (parts.length > 1) {
+      // 1. Remove the first part (e.g., 'event' from ['event', 'Event', 'metadata'])
+      const remainingParts = parts.slice(1);
+      // 2. Lowercase the new first part (e.g., 'Event' -> 'event')
+      remainingParts[0] = remainingParts[0].toLowerCase();
+      // 3. Join them back into a clean string (e.g., 'event.metadata')
+      return remainingParts.join('.');
+    }
+
+    // Fallback for unexpected formats (e.g., just "Event")
+    return path.toLowerCase();
+  };
+
+  const formattedPath = formatPath(fullPath);
+
   return (
     <motion.div
       layout
@@ -31,6 +52,12 @@ const DetailsPanel = ({ field }) => {
           >
             {/* --- Main Details Section --- */}
             <div>
+              {/* --- PATH DISPLAY NOW USES THE FORMATTED PATH --- */}
+              {formattedPath && (
+                <p className="text-solarized-base00 font-mono text-sm mb-2 break-all">
+                  {formattedPath}
+                </p>
+              )}
               <h2 className="font-mono text-2xl text-solarized-cyan">{field.name}</h2>
               {field.type && (
                 <p className="text-solarized-base00 mt-2">Type: {field.type}</p>
@@ -38,7 +65,7 @@ const DetailsPanel = ({ field }) => {
               <p className="text-solarized-base0 mt-4 break-normal">{field.description}</p>
             </div>
 
-            {/* --- Key Field Use Cases Section (Conditional) --- */}
+            {/* --- Key Field Use Cases Section (No Changes) --- */}
             {field.keyFieldInfo && field.keyFieldInfo.length > 0 && (
               <div>
                 <h3 className="text-xl font-bold text-solarized-base1 mb-3">Key Field Use Cases</h3>
@@ -52,7 +79,7 @@ const DetailsPanel = ({ field }) => {
               </div>
             )}
 
-            {/* --- Logstash Mapping Section (Conditional) --- */}
+            {/* --- Logstash Mapping Section (No Changes) --- */}
             {field.logstashMapping && (
               <div>
                 <h3 className="text-xl font-bold text-solarized-base1 mb-2">Logstash Mapping</h3>
@@ -62,7 +89,7 @@ const DetailsPanel = ({ field }) => {
               </div>
             )}
 
-            {/* --- Enum Values Section (Conditional) --- */}
+            {/* --- Enum Values Section (No Changes) --- */}
             {field.enumValues && field.enumValues.length > 0 && (
               <div>
                 <h3 className="text-xl font-bold text-solarized-base1 mb-3">Acceptable Values</h3>

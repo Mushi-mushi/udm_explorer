@@ -34,38 +34,34 @@ const ArrowIcon = ({ isExpanded }) => (
   </motion.svg>
 );
 
-const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect }) => {
+// --- PROP CHANGES ARE HERE ---
+const UdmField = ({ field, path, selectedField, searchQuery, selectedUseCase, onSelect }) => {
   const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
   const hasChildren = field.children && field.children.length > 0;
   const query = searchQuery ? searchQuery.toLowerCase() : '';
 
+  // --- PATH CALCULATION ---
+  const currentPath = [...path, field.name];
+
   const isSelected = selectedField === field;
-  
-  const isDirectSearchMatch = query && 
-    (field.name.toLowerCase().includes(query) || 
+
+  const isDirectSearchMatch = query &&
+    (field.name.toLowerCase().includes(query) ||
     ((query === 'repeated' || query === 'array') && field.repeated));
-    
+
   const isDirectUseCaseMatch = selectedUseCase && field.keyFieldInfo && field.keyFieldInfo.includes(selectedUseCase);
 
-  // --- Core Logic for Auto-Expansion (no changes) ---
   const isAutoExpandedBySearch = searchQuery && hasChildren && field.children.some(child => nodeContainsSearchMatch(child, query));
   const isAutoExpandedByUseCase = selectedUseCase && hasChildren && field.children.some(child => nodeContainsKeyField(child, selectedUseCase));
   const shouldExpand = isManuallyExpanded || isAutoExpandedBySearch || isAutoExpandedByUseCase;
 
-  // --- Dynamic Highlighting (THE CHANGE IS HERE) ---
   const selectionClass = isSelected
-    ? 'bg-solarized-orange' // 1. Changed background to orange for selected state
-    : isDirectSearchMatch
-    ? 'bg-solarized-blue bg-opacity-40'
-    : isDirectUseCaseMatch
+    ? 'bg-solarized-orange'
+    : isDirectSearchMatch || isDirectUseCaseMatch
     ? 'bg-solarized-blue bg-opacity-40'
     : 'hover:bg-solarized-base01';
 
-  // Dynamic Filtering (no changes)
-  if (searchQuery && !nodeContainsSearchMatch(field, query)) {
-    return null;
-  }
-  if (selectedUseCase && !nodeContainsKeyField(field, selectedUseCase)) {
+  if ((searchQuery && !nodeContainsSearchMatch(field, query)) || (selectedUseCase && !nodeContainsKeyField(field, selectedUseCase))) {
     return null;
   }
 
@@ -74,7 +70,9 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
       <div
         className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors duration-150 ${selectionClass}`}
         onClick={() => {
-          onSelect(field);
+          // --- ONCLICK CHANGE IS HERE ---
+          // Pass the generated path string on select
+          onSelect(field, currentPath.join('.'));
           if (hasChildren) {
             setIsManuallyExpanded(!isManuallyExpanded);
           }
@@ -82,7 +80,6 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
       >
         {hasChildren ? <ArrowIcon isExpanded={shouldExpand} /> : <div className="w-5 h-5" />}
         <div className="ml-2 flex flex-wrap items-baseline gap-x-2">
-          {/* 2. Text color is now conditional */}
           <span className={`font-mono text-lg ${isSelected ? 'text-solarized-base03' : 'text-solarized-cyan'}`}>{field.name}</span>
           {field.type && (
             <div className="flex items-baseline gap-x-2">
@@ -94,7 +91,7 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
           )}
         </div>
       </div>
-      
+
       <AnimatePresence>
         {shouldExpand && hasChildren && (
           <motion.div
@@ -108,6 +105,8 @@ const UdmField = ({ field, selectedField, searchQuery, selectedUseCase, onSelect
               <UdmField
                 key={`${field.name}-${child.name}-${index}`}
                 field={child}
+                // --- PASSING PATH TO CHILDREN ---
+                path={currentPath}
                 selectedField={selectedField}
                 searchQuery={isManuallyExpanded ? '' : searchQuery}
                 selectedUseCase={selectedUseCase}
