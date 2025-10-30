@@ -1,0 +1,85 @@
+{
+  "name": "resource",
+  "type": "Resource",
+  "description": "Information about a resource such as a task, Cloud Storage bucket, database, disk, logical policy, or something similar.",
+  "children": [
+    {
+      "name": "attribute",
+      "type": "Attribute",
+      "description": "Generic entity metadata attributes of the resource."
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "description": "Deprecated: Use resource.name or resource.product_object_id."
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "description": "The full name of the resource. For example, Google Cloud: //cloudresourcemanager.googleapis.com/projects/wombat-123, and AWS: arn:aws:iam::123456789012:user/johndoe."
+    },
+    {
+      "name": "parent",
+      "type": "string",
+      "description": "The parent of the resource. For a database table, the parent is the database. For a storage object, the bucket name. Deprecated: use resource_ancestors.name."
+    },
+    {
+      "name": "product_object_id",
+      "type": "string",
+      "description": "A vendor-specific identifier to uniquely identify the entity (a GUID, OID, or similar)"
+    },
+    {
+      "name": "resource_subtype",
+      "type": "string",
+      "description": "Resource sub-type (for example, \"BigQuery\", \"Bigtable\")."
+    },
+    {
+      "name": "resource_type",
+      "type": "Enum",
+      "description": "Resource type.",
+      "enumValues": [
+        "UNSPECIFIED",
+        "MUTEX",
+        "TASK",
+        "PIPE",
+        "DEVICE",
+        "FIREWALL_RULE",
+        "MAILBOX_FOLDER",
+        "VPC_NETWORK",
+        "VIRTUAL_MACHINE",
+        "STORAGE_BUCKET",
+        "STORAGE_OBJECT",
+        "DATABASE",
+        "TABLE",
+        "CLOUD_PROJECT",
+        "CLOUD_ORGANIZATION",
+        "SERVICE_ACCOUNT",
+        "ACCESS_POLICY",
+        "CLUSTER",
+        "SETTING",
+        "DATASET",
+        "BACKEND_SERVICE",
+        "POD",
+        "CONTAINER",
+        "FUNCTION",
+        "RUNTIME",
+        "IP_ADDRESS",
+        "DISK",
+        "VOLUME",
+        "IMAGE",
+        "SNAPSHOT",
+        "REPOSITORY",
+        "CREDENTIAL",
+        "LOAD_BALANCER",
+        "GATEWAY",
+        "SUBNET",
+        "USER"
+      ]
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "description": "Deprecated: use resource_type instead."
+    }
+  ]
+}

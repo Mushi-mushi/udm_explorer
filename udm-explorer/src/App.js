@@ -22,6 +22,8 @@ import udmLabel from './data/udm-label.json';
 import udmFile from './data/udm-file.json';
 import udmEntityRisk from './data/udm-entityrisk.json';
 import udmRiskDelta from './data/udm-riskdelta.json';
+import udmResource from './data/udm-resource.json';
+import udmAttribute from './data/udm-attribute.json';
 
 // --- Type-to-Template Mapping (no changes) ---
 const templateMap = {
@@ -41,6 +43,8 @@ const templateMap = {
   'File': udmFile?.children,
   'EntityRisk': udmEntityRisk?.children,
   'RiskDelta': udmRiskDelta?.children,
+  'Resource': udmResource?.children,
+  'Attribute': udmAttribute?.children,
 };
 
 // --- Data Hydration Function (no changes) ---
