@@ -1,0 +1,40 @@
+{
+  "name": "attribute",
+  "type": "Attribute",
+  "description": "A container for generic entity attributes including common attributes across core entities (such as, user or asset).",
+  "children": [
+    {
+      "name": "cloud",
+      "type": "Cloud",
+      "description": "Cloud metadata attributes such as project ID, account ID, or organizational hierarchy."
+    },
+    {
+      "name": "creation_time",
+      "type": "Timestamp",
+      "description": "Time the resource or entity was created or provisioned."
+    },
+    {
+      "name": "labels",
+      "type": "Label",
+      "repeated": true,
+      "description": "Set of labels for the entity. Should only be used for product labels (e.g., Google Cloud resource labels)."
+    },
+    {
+      "name": "last_update_time",
+      "type": "Timestamp",
+      "description": "Time the resource or entity was last updated."
+    },
+    {
+      "name": "permissions",
+      "type": "Permission",
+      "repeated": true,
+      "description": "System permissions for an IAM entity (human principal, service account, group)."
+    },
+    {
+      "name": "roles",
+      "type": "Role",
+      "repeated": true,
+      "description": "System IAM roles to be assumed by resources to use the role's permissions for access control."
+    }
+  ]
+}
