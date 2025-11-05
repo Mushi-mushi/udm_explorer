@@ -58,6 +58,7 @@ const templateMap = {
   'VerdictResponse': udmVerdictResponse,
   'IoCStatsType': udmIoCStatsType,
   'ProductConfidence': udmProductConfidence,
+  'IoCStats': udmIoCStats?.children,
 
 
 };
