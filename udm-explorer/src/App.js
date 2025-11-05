@@ -53,14 +53,12 @@ const templateMap = {
   'Resource': udmResource?.children,
   'Attribute': udmAttribute?.children,
   'VerdictInfo': udmVerdictInfo?.children,
-  'VerdictType': udmVerdictType,
-  'ThreatVerdict': udmThreatVerdict,
-  'VerdictResponse': udmVerdictResponse,
-  'IoCStatsType': udmIoCStatsType,
-  'ProductConfidence': udmProductConfidence,
+  'VerdictType': udmVerdictType?.children, // Corrected
+  'ThreatVerdict': udmThreatVerdict?.children, // Corrected
+  'VerdictResponse': udmVerdictResponse?.children, // Corrected
+  'IoCStatsType': udmIoCStatsType?.children, // Corrected
+  'ProductConfidence': udmProductConfidence?.children, // Corrected
   'IoCStats': udmIoCStats?.children,
-
-
 };
 
 // --- Data Hydration Function (no changes) ---
