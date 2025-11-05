@@ -1,27 +1,11 @@
 {
   "name": "ThreatVerdict",
-  "description": "GCTI threat verdict levels.",
   "type": "Enum",
+  "description": "GCTI threat verdict levels.",
   "enumValues": [
-    {
-      "name": "THREAT_VERDICT_UNSPECIFIED",
-      "number": 0,
-      "description": "Unspecified threat verdict level."
-    },
-    {
-      "name": "UNDETECTED",
-      "number": 1,
-      "description": "Undetected threat verdict level."
-    },
-    {
-      "name": "SUSPICIOUS",
-      "number": 2,
-      "description": "Suspicious threat verdict level."
-    },
-    {
-      "name": "MALICIOUS",
-      "number": 3,
-      "description": "Malicious threat verdict level."
-    }
+    "MALICIOUS",
+    "SUSPICIOUS",
+    "THREAT_VERDICT_UNSPECIFIED",
+    "UNDETECTED"
   ]
 }

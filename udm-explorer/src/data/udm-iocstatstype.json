@@ -1,0 +1,10 @@
+{
+  "name": "IoCStatsType",
+  "type": "Enum",
+  "description": "Describes the source of the IoCStat.",
+  "enumValues": [
+    "IOC_STATS_TYPE_UNSPECIFIED",
+    "FIRST_LEVEL_SOURCE",
+    "SECOND_LEVEL_SOURCE"
+  ]
+}

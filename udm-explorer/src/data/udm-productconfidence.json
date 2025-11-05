@@ -1,0 +1,11 @@
+{
+  "name": "ProductConfidence",
+  "type": "Enum",
+  "description": "Level of confidence in the IoC mapping extracted from the source.",
+  "enumValues": [
+    "PRODUCT_CONFIDENCE_UNSPECIFIED",
+    "LOW",
+    "MEDIUM",
+    "HIGH"
+  ]
+}

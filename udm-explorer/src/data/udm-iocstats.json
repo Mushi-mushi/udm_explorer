@@ -1,0 +1,46 @@
+{
+  "name": "IoCStats",
+  "description": "Information about the threat intelligence source. These fields are used to model Mandiant sources.",
+  "children": [
+    {
+      "name": "benign_count",
+      "type": "int32",
+      "description": "Count of responses where the IoC was identified as benign."
+    },
+    {
+      "name": "first_level_source",
+      "type": "string",
+      "description": "Name of first level IoC source, for example Mandiant or a third-party."
+    },
+    {
+      "name": "ioc_stats_type",
+      "type": "IoCStatsType",
+      "description": "Describes the source of the IoCStat."
+    },
+    {
+      "name": "malicious_count",
+      "type": "int32",
+      "description": "Count of responses where the IoC was identified as malicious."
+    },
+    {
+      "name": "quality",
+      "type": "ProductConfidence",
+      "description": "Level of confidence in the IoC mapping extracted from the source."
+    },
+    {
+      "name": "response_count",
+      "type": "int32",
+      "description": "Total number of response from the source."
+    },
+    {
+      "name": "second_level_source",
+      "type": "string",
+      "description": "Name of the second-level IoC source, for example Crowdsourced Threat Analysis or Knowledge Graph."
+    },
+    {
+      "name": "source_count",
+      "type": "int32",
+      "description": "Number of sources from which information was extracted."
+    }
+  ]
+}
