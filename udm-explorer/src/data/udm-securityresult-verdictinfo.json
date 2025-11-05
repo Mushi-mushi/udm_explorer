@@ -1,0 +1,87 @@
+{
+  "name": "VerdictInfo",
+  "description": "Describes the threat verdict provided by human analysts and machine learning models. These fields are used to model Mandiant sources.",
+  "children": [
+    {
+      "name": "benign_count",
+      "type": "int32",
+      "description": "Count of responses where this IoC was marked as benign."
+    },
+    {
+      "name": "category_details",
+      "type": "string",
+      "description": "Tags related to the verdict."
+    },
+    {
+      "name": "confidence_score",
+      "type": "int32",
+      "description": "Confidence score of the verdict."
+    },
+    {
+      "name": "global_customer_count",
+      "type": "int32",
+      "description": "Global customer count over the last 30 days"
+    },
+    {
+      "name": "global_hits_count",
+      "type": "int32",
+      "description": "Global hit count over the last 30 days."
+    },
+    {
+      "name": "ioc_stats",
+      "type": "SecurityResult.IoCStats",
+      "repeated": true,
+      "description": "List of IoCStats from which the verdict was generated."
+    },
+    {
+      "name": "malicious_count",
+      "type": "int32",
+      "description": "Count of responses where this IoC was marked as malicious."
+    },
+    {
+      "name": "neighbour_influence",
+      "type": "string",
+      "description": "Describes the near neighbor influence of the verdict."
+    },
+    {
+      "name": "pwn",
+      "type": "bool",
+      "description": "Whether one or more Mandiant incident response customers had this indicator in their environment."
+    },
+    {
+      "name": "pwn_first_tagged_time",
+      "type": "google.protobuf.Timestamp",
+      "description": "The timestamp of the first time a pwn was associated to this entity."
+    },
+    {
+      "name": "response_count",
+      "type": "int32",
+      "description": "Total response count across all sources."
+    },
+    {
+      "name": "source_count",
+      "type": "int32",
+      "description": "Number of sources from which intelligence was extracted."
+    },
+    {
+      "name": "source_provider",
+      "type": "string",
+      "description": "Source provider giving the machine learning verdict."
+    },
+    {
+      "name": "verdict_response",
+      "type": "SecurityResult.VerdictResponse",
+      "description": "Details about the verdict."
+    },
+    {
+      "name": "verdict_time",
+      "type": "google.protobuf.Timestamp",
+      "description": "Timestamp when the verdict was generated."
+    },
+    {
+      "name": "verdict_type",
+      "type": "SecurityResult.VerdictType",
+      "description": "Type of verdict."
+    }
+  ]
+}

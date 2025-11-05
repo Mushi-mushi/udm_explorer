@@ -24,6 +24,8 @@ import udmEntityRisk from './data/udm-entityrisk.json';
 import udmRiskDelta from './data/udm-riskdelta.json';
 import udmResource from './data/udm-resource.json';
 import udmAttribute from './data/udm-attribute.json';
+import udmVerdictInfo from './data/udm-securityresult-verdictinfo.json';
+import udmThreatVerdict from './data/udm-threatverdict.json';
 
 // --- Type-to-Template Mapping (no changes) ---
 const templateMap = {
@@ -45,6 +47,8 @@ const templateMap = {
   'RiskDelta': udmRiskDelta?.children,
   'Resource': udmResource?.children,
   'Attribute': udmAttribute?.children,
+  'VerdictInfo': udmVerdictInfo?.children,
+  'ThreatVerdict': udmThreatVerdict?.children,
 };
 
 // --- Data Hydration Function (no changes) ---
