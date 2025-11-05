@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/udm_explorer/static/css/main.910291eb.css",
-    "main.js": "/udm_explorer/static/js/main.31030ad8.js",
+    "main.js": "/udm_explorer/static/js/main.36270e2c.js",
     "static/js/453.c7d0144f.chunk.js": "/udm_explorer/static/js/453.c7d0144f.chunk.js",
     "index.html": "/udm_explorer/index.html",
     "main.910291eb.css.map": "/udm_explorer/static/css/main.910291eb.css.map",
-    "main.31030ad8.js.map": "/udm_explorer/static/js/main.31030ad8.js.map",
+    "main.36270e2c.js.map": "/udm_explorer/static/js/main.36270e2c.js.map",
     "453.c7d0144f.chunk.js.map": "/udm_explorer/static/js/453.c7d0144f.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.910291eb.css",
-    "static/js/main.31030ad8.js"
+    "static/js/main.36270e2c.js"
   ]
 }
