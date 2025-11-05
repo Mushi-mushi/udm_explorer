@@ -24,8 +24,13 @@ import udmEntityRisk from './data/udm-entityrisk.json';
 import udmRiskDelta from './data/udm-riskdelta.json';
 import udmResource from './data/udm-resource.json';
 import udmAttribute from './data/udm-attribute.json';
-import udmVerdictInfo from './data/udm-securityresult-verdictinfo.json';
+import udmVerdictInfo from './data/udm-verdictinfo.json';
+import udmVerdictType from './data/udm-verdicttype.json';
 import udmThreatVerdict from './data/udm-threatverdict.json';
+import udmVerdictResponse from './data/udm-verdictresponse.json';
+import udmIoCStatsType from './data/udm-iocstatstype.json';
+import udmProductConfidence from './data/udm-productconfidence.json';
+import udmIoCStats from './data/udm-iocstats.json';
 
 // --- Type-to-Template Mapping (no changes) ---
 const templateMap = {
@@ -48,7 +53,13 @@ const templateMap = {
   'Resource': udmResource?.children,
   'Attribute': udmAttribute?.children,
   'VerdictInfo': udmVerdictInfo?.children,
-  'ThreatVerdict': udmThreatVerdict?.children,
+  'VerdictType': udmVerdictType,
+  'ThreatVerdict': udmThreatVerdict,
+  'VerdictResponse': udmVerdictResponse,
+  'IoCStatsType': udmIoCStatsType,
+  'ProductConfidence': udmProductConfidence,
+
+
 };
 
 // --- Data Hydration Function (no changes) ---

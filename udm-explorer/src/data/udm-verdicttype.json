@@ -1,0 +1,10 @@
+{
+  "name": "VerdictType",
+  "type": "Enum",
+  "description": "The category of the verdict.",
+  "enumValues": [
+    "VERDICT_TYPE_UNSPECIFIED",
+    "PROVIDER_ML_VERDICT",
+    "ANALYST_VERDICT"
+  ]
+}

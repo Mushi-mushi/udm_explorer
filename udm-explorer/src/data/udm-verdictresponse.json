@@ -1,0 +1,10 @@
+{
+  "name": "VerdictResponse",
+  "type": "Enum",
+  "description": "Represents different verdict types. Used to represent Mandiant threat intelligence.",
+  "enumValues": [
+    "BENIGN",
+    "MALICIOUS",
+    "VERDICT_RESPONSE_UNSPECIFIED"
+  ]
+}
