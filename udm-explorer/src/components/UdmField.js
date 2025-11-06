@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- Helper functions (no changes) ---
 const nodeContainsSearchMatch = (node, query) => {
   const isDirectMatch = node.name.toLowerCase().includes(query) ||
                         ((query === 'repeated' || query === 'array') && node.repeated);
@@ -34,14 +33,12 @@ const ArrowIcon = ({ isExpanded }) => (
   </motion.svg>
 );
 
-// --- PROP CHANGES ARE HERE ---
 const UdmField = ({ field, path, selectedField, searchQuery, selectedUseCase, onSelect }) => {
   const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
   const hasChildren = field.children && field.children.length > 0;
   const query = searchQuery ? searchQuery.toLowerCase() : '';
 
-  // --- PATH CALCULATION ---
-  const currentPath = [...path, field.name];
+  const currentPath = [...path, { name: field.name, repeated: field.repeated || false }];
 
   const isSelected = selectedField === field;
 
@@ -70,9 +67,7 @@ const UdmField = ({ field, path, selectedField, searchQuery, selectedUseCase, on
       <div
         className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors duration-150 ${selectionClass}`}
         onClick={() => {
-          // --- ONCLICK CHANGE IS HERE ---
-          // Pass the generated path string on select
-          onSelect(field, currentPath.join('.'));
+          onSelect(field, currentPath);
           if (hasChildren) {
             setIsManuallyExpanded(!isManuallyExpanded);
           }
@@ -105,7 +100,6 @@ const UdmField = ({ field, path, selectedField, searchQuery, selectedUseCase, on
               <UdmField
                 key={`${field.name}-${child.name}-${index}`}
                 field={child}
-                // --- PASSING PATH TO CHILDREN ---
                 path={currentPath}
                 selectedField={selectedField}
                 searchQuery={isManuallyExpanded ? '' : searchQuery}
