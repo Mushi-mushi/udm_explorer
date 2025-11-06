@@ -272,7 +272,7 @@ const ArrowIcon = ({ isExpanded }) => (
 );
 
 const LogstashPanel = () => {
-  const [expandedIndex, setExpandedIndex] = useState(0);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const handleToggle = (index) => {
     setExpandedIndex(prevIndex => (prevIndex === index ? null : index));
