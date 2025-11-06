@@ -1,0 +1,22 @@
+{
+  "name": "Registry",
+  "type": "Registry",
+  "description": "Information about a registry key or value.",
+  "children": [
+    {
+      "name": "registry_key",
+      "type": "string",
+      "description": "Registry key associated with an application or system component (for example, HKEY_HKCU\\Environment...)."
+    },
+    {
+      "name": "registry_value_data",
+      "type": "string",
+      "description": "Data associated with a registry value (for example, %USERPROFILE%\\Local Settings\\Temp)."
+    },
+    {
+      "name": "registry_value_name",
+      "type": "string",
+      "description": "Name of the registry value associated with an application or system component (for example, TEMP)."
+    }
+  ]
+}

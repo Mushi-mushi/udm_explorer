@@ -1,0 +1,79 @@
+{
+  "name": "FileMetadataPE",
+  "type": "FileMetadataPE",
+  "description": "Metadata about the Portable Executable (PE) file.",
+  "children": [
+    {
+      "name": "compilation_exiftool_time",
+      "type": "Timestamp",
+      "description": "info.exiftool.TimeStamp."
+    },
+    {
+      "name": "compilation_time",
+      "type": "Timestamp",
+      "description": "info.pe-timestamp."
+    },
+    {
+      "name": "entry_point",
+      "type": "int64",
+      "description": "info.pe-entry-point."
+    },
+    {
+      "name": "entry_point_exiftool",
+      "type": "int64",
+      "description": "info.exiftool.EntryPoint."
+    },
+    {
+      "name": "imphash",
+      "type": "string",
+      "description": "Imphash of the file."
+    },
+    {
+      "name": "imports",
+      "type": "FileMetadataImports",
+      "repeated": true,
+      "description": "FilemetadataImports fields."
+    },
+    {
+      "name": "resource",
+      "type": "FileMetadataPeResourceInfo",
+      "repeated": true,
+      "description": "FilemetadataPeResourceInfo fields."
+    },
+    {
+      "name": "resources_language_count",
+      "type": "StringToInt64MapEntry",
+      "repeated": true,
+      "description": "Deprecated: use resources_language_count_str."
+    },
+    {
+      "name": "resources_language_count_str",
+      "type": "Label",
+      "repeated": true,
+      "description": "Number of resources by language. Example: NEUTRAL: 20, ENGLISH US: 10"
+    },
+    {
+      "name": "resources_type_count",
+      "type": "StringToInt64MapEntry",
+      "repeated": true,
+      "description": "Deprecated: use resources_type_count_str."
+    },
+    {
+      "name": "resources_type_count_str",
+      "type": "Label",
+      "repeated": true,
+      "description": "Number of resources by resource type. Example: RT_ICON: 10, RT_DIALOG: 5"
+    },
+    {
+      "name": "section",
+      "type": "FileMetadataSection",
+      "repeated": true,
+      "description": "FilemetadataSection fields."
+    },
+    {
+      "name": "signature_info",
+      "type": "FileMetadataSignatureInfo",
+      "description": "FilemetadataSignatureInfo field, deprecated, user File.signature_info instead."
+    }
+  ]
+}

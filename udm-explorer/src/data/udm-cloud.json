@@ -1,0 +1,28 @@
+{
+  "name": "Cloud",
+  "type": "Cloud",
+  "description": "Metadata related to the cloud environment.",
+  "children": [
+    {
+      "name": "availability_zone",
+      "type": "string",
+      "description": "The cloud environment availability zone (different from region which is location.name)."
+    },
+    {
+      "name": "environment",
+      "type": "Enum",
+      "description": "The Cloud environment.",
+      "enumValues": ["UNKNOWN_ENVIRONMENT", "GOOGLE_CLOUD_PLATFORM", "AMAZON_WEB_SERVICES", "MICROSOFT_AZURE"]
+    },
+    {
+      "name": "project",
+      "type": "Resource",
+      "description": "The cloud environment project information. Deprecated: Use Resource.resource_ancestors"
+    },
+    {
+      "name": "vpc",
+      "type": "Resource",
+      "description": "The cloud environment VPC. Deprecated."
+    }
+  ]
+}

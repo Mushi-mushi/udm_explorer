@@ -1,0 +1,84 @@
+{
+  "name": "Investigation",
+  "type": "Investigation",
+  "description": "Represents the aggregated state of an investigation such as categorization, severity, and status. Can be expanded to include analyst assignment details and more.",
+  "children": [
+    {
+      "name": "comments",
+      "type": "string",
+      "repeated": true,
+      "description": "Comment added by the Analyst."
+    },
+    {
+      "name": "priority",
+      "type": "Enum",
+      "description": "Priority that is assigned to a Case or Alert.",
+      "enumValues": [
+        "PRIORITY_UNSPECIFIED",
+        "PRIORITY_INFO",
+        "PRIORITY_LOW",
+        "PRIORITY_MEDIUM",
+        "PRIORITY_HIGH",
+        "PRIORITY_CRITICAL"
+      ]
+    },
+    {
+      "name": "reason",
+      "type": "Enum",
+      "description": "Reason for closing an Alert or Case in the SOAR product.",
+      "enumValues": [
+        "REASON_UNSPECIFIED",
+        "REASON_NOT_MALICIOUS",
+        "REASON_MALICIOUS",
+        "REASON_MAINTENANCE"
+      ]
+    },
+    {
+      "name": "reputation",
+      "type": "Enum",
+      "description": "Categorization options for the usefulness of a Finding.",
+      "enumValues": [
+        "REPUTATION_UNSPECIFIED",
+        "USEFUL",
+        "NOT_USEFUL"
+      ]
+    },
+    {
+      "name": "risk_score",
+      "type": "uint32",
+      "description": "Risk score for a finding set by an analyst."
+    },
+    {
+      "name": "root_cause",
+      "type": "string",
+      "description": "Root cause of the Alert or Finding set by analyst."
+    },
+    {
+      "name": "severity_score",
+      "type": "uint32",
+      "description": "Severity score for a finding set by an analyst."
+    },
+    {
+      "name": "status",
+      "type": "Enum",
+      "description": "Describes status of a Finding.",
+      "enumValues": [
+        "STATUS_UNSPECIFIED",
+        "NEW",
+        "REVIEWED",
+        "CLOSED",
+        "OPEN"
+      ]
+    },
+    {
+      "name": "verdict",
+      "type": "Enum",
+      "description": "Categorization options for the validity of a Finding (i.e. whether it reflects an actual security incident).",
+      "enumValues": [
+        "VERDICT_UNSPECIFIED",
+        "TRUE_POSITIVE",
+        "FALSE_POSITIVE"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "name": "attribute",
+  "name": "Attribute",
   "type": "Attribute",
-  "description": "A container for generic entity attributes including common attributes across core entities (such as, user or asset).",
+  "description": "Attribute is a container for generic entity attributes including common attributes across core entities (such as, user or asset). For example, Cloud is a generic entity attribute since it can apply to an asset (for example, a VM) or a user (for example, an identity service account).",
   "children": [
     {
       "name": "cloud",
@@ -17,7 +17,7 @@
       "name": "labels",
       "type": "Label",
       "repeated": true,
-      "description": "Set of labels for the entity. Should only be used for product labels (e.g., Google Cloud resource labels)."
+      "description": "Set of labels for the entity. Should only be used for product labels (for example, Google Cloud resource labels or Azure AD sensitivity labels. This shouldn't be used for arbitrary key-value mappings."
     },
     {
       "name": "last_update_time",
@@ -28,7 +28,7 @@
       "name": "permissions",
       "type": "Permission",
       "repeated": true,
-      "description": "System permissions for an IAM entity (human principal, service account, group)."
+      "description": "System permissions for IAM entity (human principal, service account, group)."
     },
     {
       "name": "roles",

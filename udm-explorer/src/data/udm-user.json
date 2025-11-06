@@ -1,0 +1,203 @@
+{
+  "name": "User",
+  "type": "User",
+  "description": "Information about a user.",
+  "children": [
+    {
+      "name": "account_expiration_time",
+      "type": "Timestamp",
+      "description": "User account expiration timestamp."
+    },
+    {
+      "name": "account_lockout_time",
+      "type": "Timestamp",
+      "description": "User account lockout timestamp."
+    },
+    {
+      "name": "account_type",
+      "type": "Enum",
+      "description": "User Account Type.",
+      "enumValues": [
+        "ACCOUNT_TYPE_UNSPECIFIED",
+        "DOMAIN_ACCOUNT_TYPE",
+        "LOCAL_ACCOUNT_TYPE",
+        "CLOUD_ACCOUNT_TYPE",
+        "SERVICE_ACCOUNT_TYPE",
+        "DEFAULT_ACCOUNT_TYPE"
+      ]
+    },
+    {
+      "name": "attribute",
+      "type": "Attribute",
+      "description": "Generic entity metadata attributes of the user."
+    },
+    {
+      "name": "company_name",
+      "type": "string",
+      "description": "User job company name."
+    },
+    {
+      "name": "department",
+      "type": "string",
+      "repeated": true,
+      "description": "User job department."
+    },
+    {
+      "name": "email_addresses",
+      "type": "string",
+      "repeated": true,
+      "description": "Email addresses of the user."
+    },
+    {
+      "name": "employee_id",
+      "type": "string",
+      "description": "Human capital management identifier."
+    },
+    {
+      "name": "first_name",
+      "type": "string",
+      "description": "First name of the user (for example, 'John')."
+    },
+    {
+      "name": "first_seen_time",
+      "type": "Timestamp",
+      "description": "The first observed time for a user. The value is calculated on the basis of the first time the identifier was observed."
+    },
+    {
+      "name": "group_identifiers",
+      "type": "string",
+      "repeated": true,
+      "description": "Product object identifiers of the group(s) the user belongs to. A vendor-specific identifier to uniquely identify the group(s) the user belongs to (a GUID, LDAP OID, or similar)."
+    },
+    {
+      "name": "groupid",
+      "type": "string",
+      "description": "The ID of the group that the user belongs to. Deprecated in favor of the repeated group_identifiers field."
+    },
+    {
+      "name": "hire_date",
+      "type": "Timestamp",
+      "description": "User job employment hire date."
+    },
+    {
+      "name": "last_bad_password_attempt_time",
+      "type": "Timestamp",
+      "description": "User last bad password attempt timestamp."
+    },
+    {
+      "name": "last_login_time",
+      "type": "Timestamp",
+      "description": "User last login timestamp."
+    },
+    {
+      "name": "last_name",
+      "type": "string",
+      "description": "Last name of the user (for example, 'Locke')."
+    },
+    {
+      "name": "last_password_change_time",
+      "type": "Timestamp",
+      "description": "User last password change timestamp."
+    },
+    {
+      "name": "managers",
+      "type": "User",
+      "repeated": true,
+      "description": "User job manager(s)."
+    },
+    {
+      "name": "middle_name",
+      "type": "string",
+      "description": "Middle name of the user."
+    },
+    {
+      "name": "office_address",
+      "type": "Location",
+      "description": "User job office location."
+    },
+    {
+      "name": "password_expiration_time",
+      "type": "Timestamp",
+      "description": "User password expiration timestamp."
+    },
+    {
+      "name": "personal_address",
+      "type": "Location",
+      "description": "Personal address of the user."
+    },
+    {
+      "name": "phone_numbers",
+      "type": "string",
+      "repeated": true,
+      "description": "Phone numbers for the user."
+    },
+    {
+      "name": "product_object_id",
+      "type": "string",
+      "description": "A vendor-specific identifier to uniquely identify the entity (for example, a GUID, LDAP OID, or similar)."
+    },
+    {
+      "name": "role_description",
+      "type": "string",
+      "description": "System role description for user. Deprecated: use attribute.roles."
+    },
+    {
+      "name": "role_name",
+      "type": "string",
+      "description": "System role name for user. Deprecated: use attribute.roles."
+    },
+    {
+      "name": "termination_date",
+      "type": "Timestamp",
+      "description": "User job employment termination date."
+    },
+    {
+      "name": "time_off",
+      "type": "TimeOff",
+      "repeated": true,
+      "description": "User time off leaves from active work."
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "description": "User job title."
+    },
+    {
+      "name": "user_authentication_status",
+      "type": "Enum",
+      "description": "Authentication status, can be used to describe the status of authentication for a user or particular credential.",
+      "enumValues": [
+        "UNKNOWN_AUTHENTICATION_STATUS",
+        "ACTIVE",
+        "SUSPENDED",
+        "NO_ACTIVE_CREDENTIALS",
+        "DELETED"
+      ]
+    },
+    {
+      "name": "user_display_name",
+      "type": "string",
+      "description": "The display name of the user (for example, 'John Locke')."
+    },
+    {
+      "name": "user_role",
+      "type": "Enum",
+      "description": "User system roles.",
+      "enumValues": [
+        "UNKNOWN_ROLE",
+        "ADMINISTRATOR",
+        "SERVICE_ACCOUNT"
+      ]
+    },
+    {
+      "name": "userid",
+      "type": "string",
+      "description": "The ID of the user."
+    },
+    {
+      "name": "windows_sid",
+      "type": "string",
+      "description": "The Microsoft Windows SID of the user."
+    }
+  ]
+}

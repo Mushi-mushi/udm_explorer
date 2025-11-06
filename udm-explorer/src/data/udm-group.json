@@ -1,0 +1,38 @@
+{
+  "name": "Group",
+  "type": "Group",
+  "description": "Information about an organizational group.",
+  "children": [
+    {
+      "name": "attribute",
+      "type": "Attribute",
+      "description": "Generic entity metadata attributes of the group."
+    },
+    {
+      "name": "creation_time",
+      "type": "Timestamp",
+      "description": "Group creation time. Deprecated: creation_time should be populated in Attribute as generic metadata."
+    },
+    {
+      "name": "email_addresses",
+      "type": "string",
+      "repeated": true,
+      "description": "Email addresses of the group."
+    },
+    {
+      "name": "group_display_name",
+      "type": "string",
+      "description": "Group display name, for example, 'Finance'."
+    },
+    {
+      "name": "product_object_id",
+      "type": "string",
+      "description": "Product globally unique user object identifier, such as an LDAP Object Identifier."
+    },
+    {
+      "name": "windows_sid",
+      "type": "string",
+      "description": "Microsoft Windows SID of the group."
+    }
+  ]
+}

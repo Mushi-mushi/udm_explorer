@@ -1,0 +1,35 @@
+{
+  "name": "FileMetadataSignatureInfo",
+  "type": "FileMetadataSignatureInfo",
+  "description": "Signature information.",
+  "children": [
+    {
+      "name": "signer",
+      "type": "string",
+      "repeated": true,
+      "description": "Deprecated: use signers field."
+    },
+    {
+      "name": "signers",
+      "type": "SignerInfo",
+      "repeated": true,
+      "description": "File metadata signer information. The order of the signers matters. Each element is a higher level authority, being the last the root authority."
+    },
+    {
+      "name": "verification_message",
+      "type": "string",
+      "description": "Status of the certificate. Valid values are \"Signed\", \"Unsigned\" or a description of the certificate anomaly, if found."
+    },
+    {
+      "name": "verified",
+      "type": "bool",
+      "description": "True if verification_message == \"Signed\""
+    },
+    {
+      "name": "x509",
+      "type": "X509",
+      "repeated": true,
+      "description": "List of certificates."
+    }
+  ]
+}

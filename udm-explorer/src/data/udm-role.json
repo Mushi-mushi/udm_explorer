@@ -1,0 +1,27 @@
+{
+  "name": "Role",
+  "type": "Role",
+  "description": "System role for resource access and modification.",
+  "children": [
+    {
+      "name": "description",
+      "type": "string",
+      "description": "System role description for user."
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "description": "System role name for user."
+    },
+    {
+      "name": "type",
+      "type": "Enum",
+      "description": "Well-known system roles.",
+      "enumValues": [
+        "TYPE_UNSPECIFIED",
+        "ADMINISTRATOR",
+        "SERVICE_ACCOUNT"
+      ]
+    }
+  ]
+}

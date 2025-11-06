@@ -1,0 +1,17 @@
+{
+    "name": "TimeOff",
+    "type": "TimeOff",
+    "description": "System record for leave/time-off from a Human Capital Management (HCM) system.",
+    "children": [
+        {
+            "name": "description",
+            "type": "string",
+            "description": "Description of the leave if available (for example, 'Vacation')."
+        },
+        {
+            "name": "interval",
+            "type": "google.type.Interval",
+            "description": "Interval duration of the leave."
+        }
+    ]
+}

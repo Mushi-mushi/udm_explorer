@@ -1,0 +1,12 @@
+{
+  "name": "PeFileMetadata",
+  "type": "PeFileMetadata",
+  "description": "Metadata about a Microsoft Windows Portable Executable.",
+  "children": [
+    {
+      "name": "import_hash",
+      "type": "string",
+      "description": "Hash of PE imports."
+    }
+  ]
+}

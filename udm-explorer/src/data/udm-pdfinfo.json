@@ -1,0 +1,29 @@
+{
+  "name": "PDFInfo",
+  "type": "PDFInfo",
+  "description": "Information about the PDF file structure. See https://developers.virustotal.com/reference/pdf_info",
+  "children": [
+    { "name": "acroform", "type": "int64", "description": "Number of /AcroForm tags found in the PDF." },
+    { "name": "autoaction", "type": "int64", "description": "Number of /AA tags found in the PDF." },
+    { "name": "embedded_file", "type": "int64", "description": "Number of /EmbeddedFile tags found in the PDF." },
+    { "name": "encrypted", "type": "int64", "description": "Whether the document is encrypted or not. This is defined by the /Encrypt tag." },
+    { "name": "endobj_count", "type": "int64", "description": "Number of object definitions (endobj keyword)." },
+    { "name": "endstream_count", "type": "int64", "description": "Number of defined stream objects (stream keyword)." },
+    { "name": "flash", "type": "int64", "description": "Number of /RichMedia tags found in the PDF." },
+    { "name": "header", "type": "string", "description": "PDF version." },
+    { "name": "javascript", "type": "int64", "description": "Number of /JavaScript tags found in the PDF file. Should be the same as the js field in normal scenarios." },
+    { "name": "jbig2_compression", "type": "int64", "description": "Number of /JBIG2Decode tags found in the PDF." },
+    { "name": "js", "type": "int64", "description": "Number of /JS tags found in the PDF file. Should be the same as javascript field in normal scenarios." },
+    { "name": "launch_action_count", "type": "int64", "description": "Number of /Launch tags found in the PDF file." },
+    { "name": "obj_count", "type": "int64", "description": "Number of objects definitions (obj keyword)." },
+    { "name": "object_stream_count", "type": "int64", "description": "Number of object streams." },
+    { "name": "openaction", "type": "int64", "description": "Number of /OpenAction tags found in the PDF." },
+    { "name": "page_count", "type": "int64", "description": "Number of pages in the PDF." },
+    { "name": "startxref", "type": "int64", "description": "Number of startxref keywords in the PDF." },
+    { "name": "stream_count", "type": "int64", "description": "Number of defined stream objects (stream keyword)." },
+    { "name": "suspicious_colors", "type": "int64", "description": "Number of colors expressed with more than 3 bytes (CVE-2009-3459)." },
+    { "name": "trailer", "type": "int64", "description": "Number of trailer keywords in the PDF." },
+    { "name": "xfa", "type": "int64", "description": "Number of /XFA tags found in the PDF." },
+    { "name": "xref", "type": "int64", "description": "Number of xref keywords in the PDF." }
+  ]
+}

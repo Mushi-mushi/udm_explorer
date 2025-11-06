@@ -1,0 +1,17 @@
+{
+  "name": "SignatureInfo",
+  "type": "SignatureInfo",
+  "description": "File signature information extracted from different tools.",
+  "children": [
+    {
+      "name": "codesign",
+      "type": "FileMetadataCodesign",
+      "description": "Signature information extracted from the codesign utility."
+    },
+    {
+      "name": "sigcheck",
+      "type": "FileMetadataSignatureInfo",
+      "description": "Signature information extracted from the sigcheck tool."
+    }
+  ]
+}
