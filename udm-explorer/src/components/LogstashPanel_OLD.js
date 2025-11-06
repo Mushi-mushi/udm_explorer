@@ -202,7 +202,7 @@ mutate {
   },
   {
     name: 'mutate { replace }',
-    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Gostash (SecOps), this replaces the standard Logstash `add_field` operation.',
+    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Logstash (SecOps), this replaces the standard Logstash `add_field` operation.',
     example: `
 # Statically sets the 'event_type' to a UDM enum value.
 mutate {
@@ -216,7 +216,7 @@ mutate {
   },
   {
     name: 'Building an Array (using merge)',
-    description: 'To create a repeated UDM field from a single value in Gostash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Gostash automatically creates an array with that field\'s value.',
+    description: 'To create a repeated UDM field from a single value in Logstash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Logstash automatically creates an array with that field\'s value.',
     example: `
 # SCENARIO 1: Single value → Array with one element
 # Source: "src_ip": "192.168.1.1"
@@ -244,7 +244,7 @@ mutate {
 # Each merge appends the value to the array.
 
 # NOTE: The key insight is that merge expects a FIELD NAME,
-# not a field value with %{} syntax. Gostash handles array creation.`
+# not a field value with %{} syntax. Logstash handles array creation.`
   },
   {
     name: 'mutate { merge }',
@@ -295,7 +295,7 @@ mutate {
   },
   {
     name: 'Looping over Arrays (`for ... in ...`)',
-    description: 'A core Gostash feature for processing arrays. It iterates through each item, allowing you to extract data, perform conversions, and map to repeated UDM fields. This is essential for converting array elements without a ruby filter.',
+    description: 'A core Logstash feature for processing arrays. It iterates through each item, allowing you to extract data, perform conversions, and map to repeated UDM fields. This is essential for converting array elements without a ruby filter.',
     example: `
 # GOAL: Convert an array of port strings ["80", "443"] to integers [80, 443].
 # 'convert' cannot do this directly, so we must loop.
@@ -430,7 +430,7 @@ if [message] =~ "malicious" {
 }`
   },
   {
-    name: 'on_error Parameter (Gostash)',
+    name: 'on_error Parameter (Logstash)',
     description: 'A parameter available on most filters (like `json`, `date`, `grok`) that provides error handling. Instead of dropping an event on failure, it adds a tag or field, which is invaluable for debugging parsing issues.',
     example: `
 # If the 'message' field is not valid JSON,
@@ -441,8 +441,8 @@ json {
 }`
   },
   {
-    name: 'statedump {} Filter (Gostash)',
-    description: 'A powerful debugging filter specific to Google SecOps (Gostash). It prints the entire state of the event (all fields and values) to the ingestion logs at the exact point it is placed in the pipeline. Use it inside conditionals to inspect specific events.',
+    name: 'statedump {} Filter (Logstash)',
+    description: 'A powerful debugging filter specific to Google SecOps (Logstash). It prints the entire state of the event (all fields and values) to the ingestion logs at the exact point it is placed in the pipeline. Use it inside conditionals to inspect specific events.',
     example: `
 # If a specific error tag is present, dump the event state for debugging.
 if "error_json_parse_failed" in [tags] {
@@ -450,8 +450,8 @@ if "error_json_parse_failed" in [tags] {
 }`
   },
   {
-    name: 'Finalization (`@output`) (Gostash)',
-    description: 'A Gostash-specific convention for defining the final event to be sent. You build your complete UDM event in a temporary field (e.g., "event"), and then merge it into the special "@output" field at the very end of the pipeline.',
+    name: 'Finalization (`@output`) (Logstash)',
+    description: 'A Logstash-specific convention for defining the final event to be sent. You build your complete UDM event in a temporary field (e.g., "event"), and then merge it into the special "@output" field at the very end of the pipeline.',
     example: `
 # ... all parsing logic populates the 'event' field ...
 
@@ -495,7 +495,7 @@ const LogstashPanel = () => {
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
         <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Parser Syntax Reference</h2>
         <p className="text-solarized-base0">
-          Complete guide to Google Chronicle parser syntax (Gostash). Expand sections below for examples and usage patterns.
+          Complete guide to Google Chronicle parser syntax (Logstash). Expand sections below for examples and usage patterns.
         </p>
         <div className="mt-4 p-3 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
           <p className="text-solarized-base1 text-sm">
