@@ -93,8 +93,6 @@ const templateMap = {
   'Role': udmRole?.children,
   'Investigation': udmInvestigation?.children,
   'Registry': udmRegistry?.children,
-  'User': udmUser?.children,
-  'TimeOff': udmTimeOff?.children,
   'Metric': udmMetric?.children,
   'User': udmUser?.children,
   'TimeOff': udmTimeOff?.children,
