@@ -497,7 +497,7 @@ filter {
     >
       {/* Header */}
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
-        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Gostash Parser Generator</h2>
+        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Gostash Parser Generator (Work in progress)</h2>
         <p className="text-solarized-base0">
           Paste a sample JSON log event, map fields to UDM paths, and generate a complete Gostash parser configuration.
         </p>
