@@ -104,6 +104,18 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUseCase, setSelectedUseCase] = useState('');
 
+  // Parser Generator state - lifted to App level to persist across view changes
+  const sampleJson = '{"timestamp": "2024-01-01T12:00:00Z", "src_ip": "192.168.1.1", "event_type": "GENERIC_EVENT", "risk_score" : "100"}';
+  const [parserState, setParserState] = useState({
+    jsonInput: sampleJson,
+    parsedFields: [],
+    mappings: [],
+    parseError: '',
+    generatedParser: '',
+    testOutput: null,
+    showTestOutput: false
+  });
+
   const handleFieldSelect = (field, pathArray) => {
     setSelectedFieldInfo({ field, pathArray });
   };
@@ -200,7 +212,10 @@ function App() {
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex flex-col md:flex-row gap-6">
             {view === 'parser' ? (
-              <ParserGenerator />
+              <ParserGenerator
+                parserState={parserState}
+                setParserState={setParserState}
+              />
             ) : view !== 'logstash' ? (
               <>
                 <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg md:w-1/2 min-w-0">
