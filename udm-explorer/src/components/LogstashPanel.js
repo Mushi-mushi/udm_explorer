@@ -13,20 +13,6 @@ mutate {
 }`
   },
   {
-    name: 'mutate { replace }',
-    description: 'Overwrites the value of a field. This can be used for static assignment, dynamically building strings, or initializing fields at the start of a pipeline.',
-    example: `
-# Statically sets the product name.
-mutate {
-  replace => { "udm.metadata.product_name" => "ThreatConnect" }
-}
-
-# Build a string by joining existing fields.
-mutate {
-  replace => { "joined_names" => "%{first_name} %{last_name}" }
-}`
-  },
-  {
     name: 'mutate { copy }',
     description: 'Copies the value of a field to a new field, leaving the original field intact. This is useful when you need the same data in two different places.',
     example: `
@@ -48,25 +34,50 @@ mutate {
 }`
   },
   {
-    name: 'mutate { add_field }',
-    description: 'Adds a new field with a static or dynamic value. This is perfect for setting UDM enum fields based on some logic, or for creating fields that don\'t exist in the source log.',
+    name: 'mutate { replace }',
+    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Gostash (SecOps), this replaces the standard Logstash `add_field` operation.',
     example: `
 # Statically sets the 'event_type' to a UDM enum value.
 mutate {
-  add_field => { "udm.metadata.event_type" => "USER_LOGIN" }
+  replace => { "udm.metadata.event_type" => "USER_LOGIN" }
+}
+
+# Build a string by joining existing fields.
+mutate {
+  replace => { "joined_names" => "%{first_name} %{last_name}" }
 }`
   },
   {
-    name: 'Building an Array (`add_field`)',
-    description: 'A special behavior of `add_field` is that if you add a value to a field that already exists, it will automatically convert that field into an array containing both the old and new values. This is the primary way to create a repeated UDM field from multiple separate source fields.',
+    name: 'Building an Array (using merge)',
+    description: 'To create a repeated UDM field from a single value in Gostash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Gostash automatically creates an array with that field\'s value.',
     example: `
-# Source has: "primary_cat": "web", "secondary_cat": "proxy"
-# Goal is: "udm.network.category_details": ["web", "proxy"]
+# SCENARIO 1: Single value → Array with one element
+# Source: "src_ip": "192.168.1.1"
+# Goal: "udm.principal.ip": ["192.168.1.1"]
+
+# IMPORTANT: Merge the field NAME (as string), not the value!
+mutate {
+  merge => { "udm.principal.ip" => "src_ip" }
+}
+
+# The above creates: "udm.principal.ip": ["192.168.1.1"]
+# This is the proven pattern from working Chronicle parsers.
+
+# SCENARIO 2: Multiple separate fields → Array with multiple elements
+# Source: "email1": "user@example.com", "email2": "admin@example.com"
+# Goal: "udm.target.user.email_addresses": ["user@example.com", "admin@example.com"]
 
 mutate {
-  add_field => { "udm.network.category_details" => "%{primary_cat}" }
-  add_field => { "udm.network.category_details" => "%{secondary_cat}" }
-}`
+  merge => { "udm.target.user.email_addresses" => "email1" }
+}
+mutate {
+  merge => { "udm.target.user.email_addresses" => "email2" }
+}
+
+# Each merge appends the value to the array.
+
+# NOTE: The key insight is that merge expects a FIELD NAME,
+# not a field value with %{} syntax. Gostash handles array creation.`
   },
   {
     name: 'mutate { merge }',
@@ -126,10 +137,10 @@ for index, value in source_ports_array {
   mutate {
     # a. Create a temporary field for the current string value ("80").
     replace => { "temp_port" => "%{value}" }
-    
+
     # b. Convert the temporary field to an integer.
     convert => { "temp_port" => "integer" }
-    
+
     # c. Merge the converted integer into a new array.
     merge => { "converted_ports_array" => "temp_port" }
   }
@@ -143,38 +154,66 @@ mutate {
   },
   {
     name: 'Mapping to Nested Repeated Fields',
-    description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.hostname`), you cannot map to it directly. You must first create an object within the array. There are two primary patterns for this.',
+    description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.nat_port` where `intermediary` is repeated), you cannot map to it directly. You must first create a temporary object with the nested field, then merge that object into the repeated parent array.',
     example: `
-# METHOD 1: The 'add_field' Shortcut (for one-off mappings)
-# Use this when you are NOT in a loop and only need to create a SINGLE object.
-# The [0] index creates the array and its first element if they don't exist.
-# NOTE: Bracket notation is REQUIRED for this to work.
+# SCENARIO: Map a source field to a nested field inside a repeated parent
+# Example: risk_score → udm.intermediary.nat_port
+# Where 'intermediary' is marked as repeated in the UDM schema
 
+# IMPORTANT: The order is critical for this to work correctly!
+
+# STEP 1: Build the temporary object with the field value
 mutate {
-  add_field => { "[udm][intermediary][0][hostname]" => "%{source_proxy_host}" }
-  add_field => { "[udm][intermediary][0][ip]" => "%{source_proxy_ip}" }
+  replace => { "temp_intermediary_obj.nat_port" => "%{risk_score}" }
 }
 
-# METHOD 2: The 'merge' Pattern (for loops or cleaner objects)
-# Use this when you ARE in a loop or need to add a complete object cleanly.
-# It involves creating a temporary object first.
-
-# 1. Build a temporary object.
+# STEP 2: Convert the type on the TEMP OBJECT field (not the source!)
+# This must happen AFTER building the object, BEFORE merging
 mutate {
-  replace => {
-    "temp_technique.id" => "%{record.techniqueId}"
-    "temp_technique.name" => "%{record.techniqueName}"
+  convert => { "temp_intermediary_obj.nat_port" => "integer" }
+}
+
+# STEP 3: Merge the complete object into the repeated parent array
+mutate {
+  merge => { "udm.intermediary" => "temp_intermediary_obj" }
+}
+
+# STEP 4: Clean up temporary fields
+mutate {
+  remove_field => ["risk_score", "temp_intermediary_obj"]
+}
+
+# RESULT: Creates udm.intermediary as an array with one object:
+# "intermediary": [{"nat_port": 100}]
+
+# COMMON PATTERN in loops:
+# When processing multiple items, use this pattern inside a 'for' loop.
+# Each iteration creates a new temp object and merges it, building the array.
+
+for index, record in source_array {
+  mutate {
+    replace => {
+      "temp_obj.field1" => "%{record.value1}"
+      "temp_obj.field2" => "%{record.value2}"
+    }
+  }
+  mutate {
+    convert => { "temp_obj.field1" => "integer" }
+  }
+  mutate {
+    merge => { "udm.repeated_parent" => "temp_obj" }
   }
 }
 
-# 2. Merge the complete object into the array.
 mutate {
-  merge => { "udm.security_result.attack_details.techniques" => "temp_technique" }
+  remove_field => ["temp_obj"]
 }
 
-# RECOMMENDATION:
-# - Use the 'add_field' shortcut for simple, one-off mappings.
-# - ALWAYS use the 'merge' pattern when iterating in a 'for' loop to ensure each item is added as a new, complete object in the array.
+# KEY POINTS:
+# 1. Always build temp object with 'replace' first
+# 2. Convert types on temp object fields (not source fields)
+# 3. Merge temp object into repeated parent
+# 4. Clean up temp objects after use
 `
   },
   {
@@ -215,12 +254,12 @@ date {
     example: `
 # Maps event type based on a source event ID.
 if [event_id] == 4624 {
-  mutate { add_field => { "udm.metadata.event_type" => "USER_LOGIN" } }
+  mutate { replace => { "udm.metadata.event_type" => "USER_LOGIN" } }
 }
 
 # Sets a category if the message contains the word "malicious".
 if [message] =~ "malicious" {
-  mutate { add_field => { "udm.security_result.threat_severity" => "CRITICAL" } }
+  mutate { replace => { "udm.security_result.threat_severity" => "CRITICAL" } }
 }`
   },
   {
@@ -259,12 +298,12 @@ mutate {
 ];
 
 const ArrowIcon = ({ isExpanded }) => (
-    <motion.svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-5 w-5 transition-transform flex-shrink-0" 
-        viewBox="0 0 20 20" 
-        fill="currentColor" 
-        animate={{ rotate: isExpanded ? 90 : 0 }} 
+    <motion.svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5 transition-transform flex-shrink-0"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        animate={{ rotate: isExpanded ? 90 : 0 }}
         transition={{ duration: 0.2 }}
     >
       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -279,7 +318,7 @@ const LogstashPanel = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}

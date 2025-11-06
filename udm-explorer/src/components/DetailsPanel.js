@@ -19,10 +19,24 @@ const DetailsPanel = ({ field, fullPathArray }) => {
     if (!pathArray || pathArray.length < 2) return '';
     const remainingParts = pathArray.slice(1);
     let pathString = remainingParts.map(p => p.name).join('.');
-    
+
     const firstSegment = remainingParts[0]?.name.toLowerCase();
     const restOfPath = pathString.substring(pathString.indexOf('.') + 1);
-    
+
+    if(remainingParts.length > 1){
+      return `event.idm.read_only_udm.${restOfPath}`;
+    }
+    return `event.idm.read_only_udm.${firstSegment}`;
+  };
+
+  const formatRawUdmPath = (pathArray) => {
+    if (!pathArray || pathArray.length < 2) return '';
+    const remainingParts = pathArray.slice(1);
+    let pathString = remainingParts.map(p => p.name).join('.');
+
+    const firstSegment = remainingParts[0]?.name.toLowerCase();
+    const restOfPath = pathString.substring(pathString.indexOf('.') + 1);
+
     if(remainingParts.length > 1){
       return `${firstSegment}.${restOfPath}`;
     }
@@ -30,6 +44,7 @@ const DetailsPanel = ({ field, fullPathArray }) => {
   };
 
   const formattedPath = formatPath(fullPathArray);
+  const rawUdmPath = formatRawUdmPath(fullPathArray);
 
   const handlePathCopyClick = () => {
     if (!formattedPath) return;
@@ -49,56 +64,61 @@ const DetailsPanel = ({ field, fullPathArray }) => {
     const isNestedInRepeated = parentPath.some(segment => segment.repeated);
 
     if (isNestedInRepeated) {
-        let pathForMethod1 = '[udm]';
-        let isFirstRepeatedFound_M1 = false;
-        fullPathArray.slice(1).forEach((segment, index) => {
-            const segmentName = index === 0 ? segment.name.toLowerCase() : segment.name;
-            pathForMethod1 += `[${segmentName}]`;
-            if (segment.repeated && !isFirstRepeatedFound_M1) {
-                pathForMethod1 += '[0]';
-                isFirstRepeatedFound_M1 = true;
-            }
-        });
-
         let pathSegmentsForParent = [];
         let relativePathSegments = [];
-        let isFirstRepeatedFound_M2 = false;
+        let isFirstRepeatedFound = false;
         for (const segment of fullPathArray.slice(1)) {
-            if (isFirstRepeatedFound_M2) {
+            if (isFirstRepeatedFound) {
                 relativePathSegments.push(segment.name);
             } else {
                 pathSegmentsForParent.push(segment.name);
             }
             if (segment.repeated) {
-                isFirstRepeatedFound_M2 = true;
+                isFirstRepeatedFound = true;
             }
         }
         if (pathSegmentsForParent.length > 0) {
             pathSegmentsForParent[0] = pathSegmentsForParent[0].toLowerCase();
         }
-        const pathForMethod2 = 'udm.' + pathSegmentsForParent.join('.');
+        const pathForParent = 'event.idm.read_only_udm.' + pathSegmentsForParent.join('.');
         const relativePath = relativePathSegments.join('.');
+        const repeatedParentName = pathSegmentsForParent[pathSegmentsForParent.length - 1];
+        const tempObjName = `temp_${repeatedParentName}_obj`;
+
+        // Determine if type conversion is needed
+        let typeConversionBlock = '';
+        if (fieldType.startsWith('int') || fieldType.startsWith('uint') || fieldType.startsWith('float') || fieldType.startsWith('double')) {
+          const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
+          typeConversionBlock = `
+# STEP 2: Convert the type on the temp object field (not the source!)
+mutate {
+  convert => { "${tempObjName}.${relativePath}" => "${numericType}" }
+}
+`;
+        }
 
         const nestedFilterTemplate = `
-# To map a field inside a repeated object, you have two main patterns.
+# Mapping to a field nested inside a repeated parent object
+# Parent '${repeatedParentName}' is repeated in the UDM schema
+# IMPORTANT: Follow this order exactly!
 
-# METHOD 1: 'add_field' Shortcut (for one-off mappings)
-# Use this when you are NOT in a loop. NOTE: Bracket notation is required.
+# STEP 1: Build the temporary object with the field value
 mutate {
-  add_field => { "${pathForMethod1}" => "%{${sourceFieldPlaceholder}}" }
+  replace => { "${tempObjName}.${relativePath}" => "%{${sourceFieldPlaceholder}}" }
+}
+${typeConversionBlock}
+# STEP 3: Merge the complete object into the repeated parent array
+mutate {
+  merge => { "${pathForParent}" => "${tempObjName}" }
 }
 
-# METHOD 2: 'merge' Pattern (for loops or cleaner objects)
-# Use this inside a 'for' loop to add a complete object to the array.
+# STEP 4: Clean up temporary fields
 mutate {
-  replace => {
-    "temp_object.${relativePath}" => "%{${sourceFieldPlaceholder}}"
-    # ... add other fields for this object to "temp_object" ...
-  }
+  remove_field => ["${sourceFieldPlaceholder}", "${tempObjName}"]
 }
-mutate {
-  merge => { "${pathForMethod2}" => "temp_object" }
-}`;
+
+# RESULT: Creates ${repeatedParentName} as an array with the nested field
+# For loops: Use this pattern inside 'for' to add multiple objects`;
         displayLogstashMapping = nestedFilterTemplate.trim();
 
     } else if (field.repeated) {
@@ -110,7 +130,7 @@ mutate {
 mutate {
   split => { "${sourceFieldPlaceholder}" => "," }
 }`;
-      
+
       if (fieldType.startsWith('int') || fieldType.startsWith('uint') || fieldType.startsWith('float') || fieldType.startsWith('double')) {
         const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
         repeatedFilterTemplate += `
@@ -130,7 +150,7 @@ for index, value in ${sourceFieldPlaceholder} {
 
 # 3. Rename the new array of numbers to the final UDM field.
 mutate {
-  rename => { "temp_converted_array" => "udm.${formattedPath}" }
+  rename => { "temp_converted_array" => "event.idm.read_only_udm.${rawUdmPath}" }
 }
 
 # 4. Clean up the original source and temporary fields.
@@ -142,29 +162,38 @@ mutate {
 
 # 2. Finally, rename the prepared array to the UDM field.
 mutate {
-  rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
+  rename => { "${sourceFieldPlaceholder}" => "event.idm.read_only_udm.${rawUdmPath}" }
 }`;
       }
 
       repeatedFilterTemplate += `
 
-# --- OPTION 2: Source is multiple, separate fields ---
-# (e.g., source_A: "val1", source_B: "val2")
-# Use 'add_field' repeatedly to the same target to build an array.
+# --- OPTION 2: Source is a single value to be wrapped in an array ---
+# (e.g., source_ip: "192.168.1.1" → ip: ["192.168.1.1"])
+# Use merge with the field NAME to automatically create an array.
 mutate {
-  add_field => { "udm.${formattedPath}" => "%{source_field_A}" }
-  add_field => { "udm.${formattedPath}" => "%{source_field_B}" }
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "${sourceFieldPlaceholder}" }
 }
 
-# --- OPTION 3: Source is already a correctly typed array ---
+# --- OPTION 3: Source is multiple, separate fields ---
+# (e.g., source_A: "val1", source_B: "val2")
+# Merge each field name to build the array.
+mutate {
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "source_field_A" }
+}
+mutate {
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "source_field_B" }
+}
+
+# --- OPTION 4: Source is already a correctly typed array ---
 # This is the simplest case. Just rename the field.
 # mutate {
-#   rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
+#   rename => { "${sourceFieldPlaceholder}" => "event.idm.read_only_udm.${rawUdmPath}" }
 # }`;
       displayLogstashMapping = repeatedFilterTemplate;
 
     } else {
-      const udmPathString = `udm.${formattedPath}`;
+      const udmPathString = `event.idm.read_only_udm.${rawUdmPath}`;
       if (fieldType.includes('timestamp')) {
         displayLogstashMapping = `date {\n  match => ["${field.name}", "ISO8601"]\n  target => "${udmPathString}"\n}`;
       } else if (fieldType === 'string') {
@@ -173,9 +202,9 @@ mutate {
         const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
         displayLogstashMapping = `mutate {\n  convert => { "${sourceFieldPlaceholder}" => "${numericType}" }\n}\nmutate {\n  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }\n}`;
       } else if (fieldType === 'bool' || fieldType === 'boolean') {
-        displayLogstashMapping = `if [${sourceFieldPlaceholder}] in ["true", "True", "TRUE", "yes", "1"] {\n  mutate {\n    add_field => { "${udmPathString}" => "true" }\n  }\n} else if [${sourceFieldPlaceholder}] in ["false", "False", "FALSE", "no", "0"] {\n  mutate {\n    add_field => { "${udmPathString}" => "false" }\n  }\n}\nmutate {\n  convert => { "${udmPathString}" => "boolean" }\n}`;
+        displayLogstashMapping = `if [${sourceFieldPlaceholder}] in ["true", "True", "TRUE", "yes", "1"] {\n  mutate {\n    replace => { "${udmPathString}" => "true" }\n  }\n} else if [${sourceFieldPlaceholder}] in ["false", "False", "FALSE", "no", "0"] {\n  mutate {\n    replace => { "${udmPathString}" => "false" }\n  }\n}\nmutate {\n  convert => { "${udmPathString}" => "boolean" }\n}`;
       } else if (fieldType === 'enum' && selectedEnumValue) {
-        displayLogstashMapping = `mutate {\n  # Statically assign the selected value.\n  add_field => { "${udmPathString}" => "${selectedEnumValue}" }\n}`;
+        displayLogstashMapping = `mutate {\n  # Statically assign the selected value.\n  replace => { "${udmPathString}" => "${selectedEnumValue}" }\n}`;
       }
     }
   }
@@ -189,7 +218,7 @@ mutate {
       console.error('Failed to copy Logstash mapping: ', err);
     });
   };
-  
+
   const handleEnumValueSelect = (value) => {
     setSelectedEnumValue(value);
   };
@@ -202,30 +231,30 @@ mutate {
     >
       <AnimatePresence mode="wait">
         {!field ? (
-          <motion.div 
-            key="placeholder" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
+          <motion.div
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="text-center text-solarized-base00"
           >
             Select a field to see its details.
           </motion.div>
         ) : (
-          <motion.div 
-            key={field.name} 
-            initial={{ opacity: 0, y: 15 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -15 }} 
-            transition={{ duration: 0.25 }} 
+          <motion.div
+            key={field.name}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
             className="space-y-6"
           >
             <div>
               {formattedPath && (
                 <div className="flex items-center justify-between gap-3 mb-2">
                   <p className="text-solarized-base00 font-mono text-sm break-all">{formattedPath}</p>
-                  <button 
-                    onClick={handlePathCopyClick} 
+                  <button
+                    onClick={handlePathCopyClick}
                     className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0"
                   >
                     {isPathCopied ? 'Copied!' : 'Copy'}
@@ -254,8 +283,8 @@ mutate {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xl font-bold text-solarized-base1">Gostash Mapping</h3>
-                  <button 
-                    onClick={handleLogstashCopyClick} 
+                  <button
+                    onClick={handleLogstashCopyClick}
                     className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0"
                   >
                     {isLogstashCopied ? 'Copied!' : 'Copy'}

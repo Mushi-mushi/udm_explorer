@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import UdmField from './components/UdmField';
 import DetailsPanel from './components/DetailsPanel';
 import LogstashPanel from './components/LogstashPanel';
+import ParserGenerator from './components/ParserGenerator';
 
 // --- (All data imports are unchanged) ---
 import udmEvent from './data/udm-event.json';
@@ -130,7 +131,7 @@ function App() {
           <p className="text-solarized-base00">An interactive viewer for the UDM schema and Gogstash operations.</p>
         </header>
 
-        <div className="flex justify-center mb-4 gap-4">
+        <div className="flex justify-center mb-4 gap-4 flex-wrap">
           <button onClick={() => { setView('event'); resetView(); }} className={`px-6 py-2 rounded-full font-semibold transition-colors ${view === 'event' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
             Event Model
           </button>
@@ -140,9 +141,12 @@ function App() {
           <button onClick={() => { setView('logstash'); resetView(); }} className={`px-6 py-2 rounded-full font-semibold transition-colors ${view === 'logstash' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
             Gogstash Operations
           </button>
+          <button onClick={() => { setView('parser'); resetView(); }} className={`px-6 py-2 rounded-full font-semibold transition-colors ${view === 'parser' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
+            Parser Generator
+          </button>
         </div>
 
-        {view !== 'logstash' && (
+        {view !== 'logstash' && view !== 'parser' && (
           <>
             <div className="mb-4 max-w-lg mx-auto">
               <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setSelectedUseCase(''); }} placeholder="Search for a UDM field (or 'repeated')..." className="w-full px-4 py-2 bg-solarized-base02 text-solarized-base1 rounded-full border-2 border-transparent focus:outline-none focus:border-solarized-cyan" />
@@ -161,7 +165,9 @@ function App() {
         )}
 
         <div className="flex flex-col md:flex-row gap-8">
-          {view !== 'logstash' ? (
+          {view === 'parser' ? (
+            <ParserGenerator />
+          ) : view !== 'logstash' ? (
             <>
               <main className="bg-solarized-base02 rounded-xl p-4 shadow-lg md:w-1/2 min-w-0">
                 <UdmField
