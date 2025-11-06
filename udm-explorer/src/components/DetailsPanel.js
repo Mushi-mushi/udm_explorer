@@ -135,7 +135,7 @@ mutate {
         const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
         repeatedFilterTemplate += `
 
-# 2. Since 'convert' doesn't work on array elements in Gostash,
+# 2. Since 'convert' doesn't work on array elements in Logstash,
 #    we must loop through the array to convert each item.
 for index, value in ${sourceFieldPlaceholder} {
   mutate {
@@ -282,7 +282,7 @@ mutate {
             {displayLogstashMapping && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-bold text-solarized-base1">Gostash Mapping</h3>
+                  <h3 className="text-xl font-bold text-solarized-base1">Logstash Mapping</h3>
                   <button
                     onClick={handleLogstashCopyClick}
                     className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0"

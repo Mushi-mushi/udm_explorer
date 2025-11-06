@@ -94,14 +94,24 @@ const typeMap = {
   'Metric': udmMetric,
 };
 
-const ParserGenerator = () => {
-  const sampleJson = '{"timestamp": "2024-01-01T12:00:00Z", "src_ip": "192.168.1.1", "event_type": "GENERIC_EVENT", "risk_score" : "100"}';
-  const [jsonInput, setJsonInput] = useState(sampleJson);
-  const [parsedFields, setParsedFields] = useState([]);
-  const [mappings, setMappings] = useState([]);
-  const [parseError, setParseError] = useState('');
-  const [generatedParser, setGeneratedParser] = useState('');
+const ParserGenerator = ({ parserState, setParserState }) => {
   const [isCopied, setIsCopied] = useState(false);
+
+  // Destructure state for easier access
+  const {
+    jsonInput,
+    parsedFields,
+    mappings,
+    parseError,
+    generatedParser,
+    testOutput,
+    showTestOutput
+  } = parserState;
+
+  // Helper to update parser state
+  const updateState = (updates) => {
+    setParserState(prev => ({ ...prev, ...updates }));
+  };
 
   // Extract all fields from JSON object recursively
   const extractFields = (obj, prefix = '') => {
@@ -143,38 +153,48 @@ const ParserGenerator = () => {
       const fields = extractFields(parsed);
       // Filter to only show leaf fields (actual values, not parent objects)
       const leafFields = fields.filter(f => f.type !== 'object');
-      setParsedFields(leafFields);
-      setParseError('');
-      setMappings([]);
-      setGeneratedParser('');
+      updateState({
+        parsedFields: leafFields,
+        parseError: '',
+        mappings: [],
+        generatedParser: ''
+      });
     } catch (error) {
-      setParseError(`Invalid JSON: ${error.message}`);
-      setParsedFields([]);
-      setMappings([]);
+      updateState({
+        parseError: `Invalid JSON: ${error.message}`,
+        parsedFields: [],
+        mappings: []
+      });
     }
   };
 
   // Add a new mapping
   const handleAddMapping = (sourcePath) => {
     if (!mappings.find(m => m.sourcePath === sourcePath)) {
-      setMappings([...mappings, {
-        sourcePath,
-        udmPath: '',
-        sourceType: parsedFields.find(f => f.path === sourcePath)?.type || 'string'
-      }]);
+      updateState({
+        mappings: [...mappings, {
+          sourcePath,
+          udmPath: '',
+          sourceType: parsedFields.find(f => f.path === sourcePath)?.type || 'string'
+        }]
+      });
     }
   };
 
   // Remove a mapping
   const handleRemoveMapping = (sourcePath) => {
-    setMappings(mappings.filter(m => m.sourcePath !== sourcePath));
+    updateState({
+      mappings: mappings.filter(m => m.sourcePath !== sourcePath)
+    });
   };
 
   // Update UDM path for a mapping
   const handleUpdateUdmPath = (sourcePath, udmPath) => {
-    setMappings(mappings.map(m =>
-      m.sourcePath === sourcePath ? { ...m, udmPath } : m
-    ));
+    updateState({
+      mappings: mappings.map(m =>
+        m.sourcePath === sourcePath ? { ...m, udmPath } : m
+      )
+    });
   };
 
   // Detect UDM field type from path
@@ -292,14 +312,16 @@ const ParserGenerator = () => {
     return null;
   };
 
-  // Generate Gostash parser
+  // Generate Logstash parser
   const generateParser = () => {
     if (mappings.length === 0) {
-      setGeneratedParser('# No mappings defined. Add at least one field mapping.');
+      updateState({
+        generatedParser: '# No mappings defined. Add at least one field mapping.'
+      });
       return;
     }
 
-    let parser = `# Gostash Parser Configuration
+    let parser = `# Logstash Parser Configuration
 # Generated on ${new Date().toISOString()}
 
 filter {
@@ -474,7 +496,93 @@ filter {
 }
 `;
 
-    setGeneratedParser(parser);
+    updateState({ generatedParser: parser });
+  };
+
+  // Test the parser using Chronicle CLI via backend
+  const testParser = async () => {
+    if (!generatedParser || !jsonInput) {
+      updateState({
+        testOutput: {
+          error: 'Please generate a parser and provide sample log first',
+          success: false
+        },
+        showTestOutput: true
+      });
+      return;
+    }
+
+    try {
+      // Show loading state
+      updateState({
+        testOutput: {
+          loading: true,
+          success: false
+        },
+        showTestOutput: true
+      });
+
+      // Call backend API
+      const response = await fetch('http://localhost:3001/api/test-parser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          parser: generatedParser,
+          sampleLog: jsonInput,
+          logType: 'CUSTOM'
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log('Test parser response:', { ok: response.ok, status: response.status, data });
+
+      if (response.ok) {
+        // Check if it's a Chronicle not configured response
+        if (data.chronicleNotConfigured) {
+          console.log('Detected Chronicle not configured, setting state...');
+          updateState({
+            testOutput: {
+              ...data,
+              success: false,
+              loading: false,
+              chronicleNotConfigured: true
+            },
+            showTestOutput: true
+          });
+        } else {
+          updateState({
+            testOutput: {
+              ...data,
+              success: true,
+              loading: false
+            },
+            showTestOutput: true
+          });
+        }
+      } else {
+        updateState({
+          testOutput: {
+            error: data.error || 'Failed to test parser',
+            rawOutput: data.rawOutput,
+            success: false,
+            loading: false
+          },
+          showTestOutput: true
+        });
+      }
+    } catch (error) {
+      updateState({
+        testOutput: {
+          error: `Failed to connect to backend server: ${error.message}. Make sure the server is running on port 3001.`,
+          success: false,
+          loading: false
+        },
+        showTestOutput: true
+      });
+    }
   };
 
   const handleCopyParser = () => {
@@ -497,9 +605,9 @@ filter {
     >
       {/* Header */}
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
-        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Gostash Parser Generator (Work in progress)</h2>
+        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Logstash Parser Generator (Work in progress)</h2>
         <p className="text-solarized-base0">
-          Paste a sample JSON log event, map fields to UDM paths, and generate a complete Gostash parser configuration.
+          Paste a sample JSON log event, map fields to UDM paths, and generate a complete Logstash parser configuration.
         </p>
       </div>
 
@@ -508,7 +616,7 @@ filter {
         <h3 className="text-xl font-bold text-solarized-base1 mb-3">Step 1: Paste Sample JSON Event</h3>
         <textarea
           value={jsonInput}
-          onChange={(e) => setJsonInput(e.target.value)}
+          onChange={(e) => updateState({ jsonInput: e.target.value })}
           placeholder='{"timestamp": "2024-01-01T12:00:00Z", "src_ip": "192.168.1.1", "event_type": "login"}'
           className="w-full h-48 p-4 bg-solarized-base03 text-solarized-base1 font-mono text-sm rounded-lg border-2 border-transparent focus:outline-none focus:border-solarized-cyan resize-y"
         />
@@ -599,12 +707,20 @@ filter {
             </div>
 
             {mappings.length > 0 && (
-              <button
-                onClick={generateParser}
-                className="mt-6 px-6 py-2 bg-solarized-blue text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors"
-              >
-                Generate Parser ({mappings.length} mapping{mappings.length !== 1 ? 's' : ''})
-              </button>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={generateParser}
+                  className="px-6 py-2 bg-solarized-blue text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors"
+                >
+                  Generate Parser ({mappings.length} mapping{mappings.length !== 1 ? 's' : ''})
+                </button>
+                <button
+                  onClick={testParser}
+                  className="px-6 py-2 bg-solarized-green text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors"
+                >
+                  🧪 Test Parser
+                </button>
+              </div>
             )}
           </motion.div>
         )}
@@ -620,7 +736,7 @@ filter {
             className="bg-solarized-base02 rounded-xl p-6 shadow-lg"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-bold text-solarized-base1">Step 3: Generated Gostash Parser</h3>
+              <h3 className="text-xl font-bold text-solarized-base1">Step 3: Generated Logstash Parser</h3>
               <button
                 onClick={handleCopyParser}
                 className="px-4 py-2 bg-solarized-cyan text-solarized-base03 text-sm font-semibold rounded-full hover:bg-solarized-blue transition-colors"
@@ -643,6 +759,144 @@ filter {
                 <li>Handle array fields according to your UDM schema requirements</li>
               </ul>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Test Output Section */}
+      <AnimatePresence>
+        {showTestOutput && testOutput && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-solarized-base02 rounded-xl p-6 shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xl font-bold text-solarized-base1">🧪 Chronicle CLI Test Results</h3>
+              <button
+                onClick={() => updateState({ showTestOutput: false })}
+                className="text-solarized-base00 hover:text-solarized-red transition-colors"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {testOutput.loading ? (
+              <div className="p-4 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
+                <p className="text-solarized-blue text-sm">
+                  ⏳ <strong>Testing parser with Chronicle CLI...</strong> Please wait.
+                </p>
+              </div>
+            ) : testOutput.chronicleNotConfigured ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-solarized-yellow bg-opacity-10 border border-solarized-yellow rounded-lg">
+                  <p className="text-solarized-yellow text-sm mb-3">
+                    ⚠️ <strong>Chronicle Instance Not Fully Onboarded</strong>
+                  </p>
+                  <p className="text-solarized-base0 text-sm mb-2">
+                    {testOutput.message}
+                  </p>
+                  <p className="text-solarized-base0 text-sm">
+                    {testOutput.details}
+                  </p>
+                </div>
+
+                {testOutput.parserInfo && (
+                  <div className="p-4 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
+                    <h4 className="text-solarized-cyan font-semibold mb-2">✅ Local Validation Passed:</h4>
+                    <ul className="text-solarized-base0 text-sm space-y-1">
+                      <li>• Parser size: {testOutput.parserInfo.parserSize}</li>
+                      <li>• Sample log size: {testOutput.parserInfo.logSize}</li>
+                      <li>• Log type: {testOutput.parserInfo.logType}</li>
+                      <li>• Files created and verified successfully</li>
+                    </ul>
+                    <p className="text-solarized-base01 text-xs mt-3 italic">
+                      {testOutput.note}
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-4 bg-solarized-base03 border border-solarized-base01 rounded-lg">
+                  <h4 className="text-solarized-base1 font-semibold mb-2">📞 Next Steps:</h4>
+                  <p className="text-solarized-base0 text-sm mb-2">
+                    {testOutput.contactInfo}
+                  </p>
+                  <a
+                    href="https://chronicle.security/contact-us/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-solarized-blue hover:text-solarized-cyan text-sm underline"
+                  >
+                    Contact Chronicle Support →
+                  </a>
+                </div>
+
+                {testOutput.rawOutput && (
+                  <details className="group">
+                    <summary className="cursor-pointer text-solarized-base01 hover:text-solarized-base1 text-sm font-semibold mb-2">
+                      🔍 View API Error Details
+                    </summary>
+                    <pre className="bg-solarized-base03 text-solarized-base0 p-4 rounded-lg text-xs overflow-x-auto max-h-48 overflow-y-auto mt-2">
+                      <code>{testOutput.rawOutput}</code>
+                    </pre>
+                  </details>
+                )}
+              </div>
+            ) : testOutput.success ? (
+              <div className="space-y-4">
+                {testOutput.cliInstalled === false && (
+                  <div className="p-4 bg-solarized-yellow bg-opacity-10 border border-solarized-yellow rounded-lg mb-4">
+                    <p className="text-solarized-yellow text-sm">
+                      ⚠️ <strong>Chronicle CLI not installed.</strong> Showing simulated output. Install the CLI to test with real parser execution.
+                    </p>
+                  </div>
+                )}
+
+                {testOutput.output && (
+                  <div>
+                    <h4 className="text-solarized-green font-semibold mb-2">✅ UDM Event Output:</h4>
+                    <pre className="bg-solarized-base03 text-solarized-green p-4 rounded-lg text-sm overflow-x-auto max-h-96 overflow-y-auto">
+                      <code>{JSON.stringify(testOutput.output, null, 2)}</code>
+                    </pre>
+                  </div>
+                )}
+
+                {testOutput.rawOutput && (
+                  <div>
+                    <h4 className="text-solarized-cyan font-semibold mb-2">📋 Raw CLI Output:</h4>
+                    <pre className="bg-solarized-base03 text-solarized-base0 p-4 rounded-lg text-sm overflow-x-auto max-h-64 overflow-y-auto">
+                      <code>{testOutput.rawOutput}</code>
+                    </pre>
+                  </div>
+                )}
+
+                <div className="p-4 bg-solarized-green bg-opacity-10 border border-solarized-green rounded-lg">
+                  <p className="text-solarized-base0 text-sm">
+                    ✅ <strong>Parser test completed successfully!</strong> {testOutput.cliInstalled ?
+                      'The output shows the actual result from Chronicle CLI.' :
+                      'Install the Chronicle CLI for real parser validation.'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 bg-solarized-red bg-opacity-10 border border-solarized-red rounded-lg">
+                  <p className="text-solarized-red text-sm">
+                    ❌ <strong>Parser test failed:</strong> {testOutput.error}
+                  </p>
+                </div>
+
+                {testOutput.rawOutput && (
+                  <div>
+                    <h4 className="text-solarized-yellow font-semibold mb-2">📋 CLI Output:</h4>
+                    <pre className="bg-solarized-base03 text-solarized-base0 p-4 rounded-lg text-sm overflow-x-auto max-h-64 overflow-y-auto">
+                      <code>{testOutput.rawOutput}</code>
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
