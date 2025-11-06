@@ -4,23 +4,38 @@ UDM Explorer is a comprehensive React-based web application for exploring Google
 
 ## Features
 
-### � Parser Generator (NEW!)
+### 🚧 Parser Generator (WORK IN PROGRESS)
 Automatically generate complete Gostash parser configurations from sample JSON logs:
 - **Paste Sample JSON**: Input a sample log event in JSON format
 - **Auto-detect Fields**: Automatically extracts all fields, including nested objects and arrays
 - **Interactive Mapping**: Click to map source fields to UDM paths
 - **Smart Type Detection**: Automatically detects timestamps, integers, and other data types
+- **Repeated Field Detection**: Intelligently identifies UDM fields marked as repeated and fields nested in repeated parents
 - **Complete Parser Output**: Generates production-ready Gostash filter configurations with:
   - JSON parsing with error handling
   - Timestamp field parsing
   - Numeric type conversions
   - String field mappings
-  - Array handling guidance
+  - Repeated field array creation using merge patterns
+  - Nested-in-repeated field handling with temp objects
   - Event finalization with `@output`
   - Field cleanup
 - **One-Click Copy**: Copy the entire generated parser to clipboard
 
-### �📋 Dual Schema Exploration
+> **Note**: The Parser Generator is actively being refined. Generated parsers should be thoroughly tested in a development environment before production use. Some edge cases may require manual adjustments.
+
+### 🎯 Interactive Field Details
+- Select any field to view comprehensive details:
+  - Full field path (with copy-to-clipboard)
+  - Field type and description
+  - Key field use case tags
+  - Enum values (if applicable)
+  - **Auto-generated Gostash mapping examples** (WORK IN PROGRESS)
+- Animated transitions for smooth user experience
+
+> **Note**: Gostash mapping examples are being continuously improved based on real-world parser patterns. Always verify generated code matches your specific use case.
+
+### 📋 Dual Schema Exploration
 - **Event Model**: Explore the complete UDM Event schema with all nested fields
 - **Entity Model**: Browse the UDM Entity schema structure
 - Switch seamlessly between models with preserved search and filter states
@@ -31,16 +46,8 @@ Automatically generate complete Gostash parser configurations from sample JSON l
 - **Smart Highlighting**: Search matches are highlighted in the tree for easy identification
 - **Auto-Expansion**: Tree automatically expands to show matching fields
 
-### 🎯 Interactive Field Details
-- Select any field to view comprehensive details:
-  - Full field path (with copy-to-clipboard)
-  - Field type and description
-  - Key field use case tags
-  - Enum values (if applicable)
-- Animated transitions for smooth user experience
-
-### ⚙️ Automatic Gostash Code Generation
-The app generates production-ready Gostash filter configurations for every field type:
+### ⚙️ Automatic Gostash Code Generation (WORK IN PROGRESS)
+The app generates Gostash filter configurations for every field type:
 
 - **Simple Fields**: Automatic `mutate { rename }` or `convert` + `rename` patterns
 - **Timestamp Fields**: `date` filter configurations with ISO8601 parsing
@@ -48,12 +55,14 @@ The app generates production-ready Gostash filter configurations for every field
 - **Enum Fields**: Static assignment with selectable enum values
 - **Repeated Fields**: Multi-pattern solutions including:
   - Split from delimited strings
-  - Build arrays from multiple fields
+  - Build arrays from multiple fields using merge
   - Type conversion within loops
-- **Nested Repeated Fields**: Both bracket-notation and merge-pattern approaches
+- **Nested Repeated Fields**: Temp object creation with merge pattern
 - **Copy-to-Clipboard**: One-click copy for all generated configurations
 
-### 📚 Gostash Operations Reference
+> **Note**: Gostash code generation is being actively refined based on proven parser patterns. The generated examples provide a solid starting point but may need adjustments for complex scenarios.
+
+### 📚 Gostash Operations Reference (WORK IN PROGRESS)
 Comprehensive, interactive documentation for all Gostash operations:
 - `mutate` variants (rename, replace, copy, convert, merge, split, gsub, remove_field)
 - Array processing with `for` loops
@@ -68,6 +77,8 @@ Each operation includes:
 - Detailed description
 - Real-world examples
 - Best practices and common patterns
+
+> **Note**: The Gostash Operations Reference is continuously updated with proven patterns from real-world parsers. Recommendations may evolve as we discover better approaches.
 
 ### 🎨 Modern UI/UX
 - **Solarized Dark Theme**: Easy on the eyes for extended use

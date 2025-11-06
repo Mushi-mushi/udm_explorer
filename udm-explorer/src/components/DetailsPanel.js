@@ -64,56 +64,61 @@ const DetailsPanel = ({ field, fullPathArray }) => {
     const isNestedInRepeated = parentPath.some(segment => segment.repeated);
 
     if (isNestedInRepeated) {
-        let pathForMethod1 = '[event][idm][read_only_udm][udm]';
-        let isFirstRepeatedFound_M1 = false;
-        fullPathArray.slice(1).forEach((segment, index) => {
-            const segmentName = index === 0 ? segment.name.toLowerCase() : segment.name;
-            pathForMethod1 += `[${segmentName}]`;
-            if (segment.repeated && !isFirstRepeatedFound_M1) {
-                pathForMethod1 += '[0]';
-                isFirstRepeatedFound_M1 = true;
-            }
-        });
-
         let pathSegmentsForParent = [];
         let relativePathSegments = [];
-        let isFirstRepeatedFound_M2 = false;
+        let isFirstRepeatedFound = false;
         for (const segment of fullPathArray.slice(1)) {
-            if (isFirstRepeatedFound_M2) {
+            if (isFirstRepeatedFound) {
                 relativePathSegments.push(segment.name);
             } else {
                 pathSegmentsForParent.push(segment.name);
             }
             if (segment.repeated) {
-                isFirstRepeatedFound_M2 = true;
+                isFirstRepeatedFound = true;
             }
         }
         if (pathSegmentsForParent.length > 0) {
             pathSegmentsForParent[0] = pathSegmentsForParent[0].toLowerCase();
         }
-        const pathForMethod2 = 'event.idm.read_only_udm.' + pathSegmentsForParent.join('.');
+        const pathForParent = 'event.idm.read_only_udm.' + pathSegmentsForParent.join('.');
         const relativePath = relativePathSegments.join('.');
+        const repeatedParentName = pathSegmentsForParent[pathSegmentsForParent.length - 1];
+        const tempObjName = `temp_${repeatedParentName}_obj`;
+
+        // Determine if type conversion is needed
+        let typeConversionBlock = '';
+        if (fieldType.startsWith('int') || fieldType.startsWith('uint') || fieldType.startsWith('float') || fieldType.startsWith('double')) {
+          const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
+          typeConversionBlock = `
+# STEP 2: Convert the type on the temp object field (not the source!)
+mutate {
+  convert => { "${tempObjName}.${relativePath}" => "${numericType}" }
+}
+`;
+        }
 
         const nestedFilterTemplate = `
-# To map a field inside a repeated object, you have two main patterns.
+# Mapping to a field nested inside a repeated parent object
+# Parent '${repeatedParentName}' is repeated in the UDM schema
+# IMPORTANT: Follow this order exactly!
 
-# METHOD 1: 'replace' with Bracket Notation (for one-off mappings)
-# Use this when you are NOT in a loop. NOTE: Bracket notation is required.
+# STEP 1: Build the temporary object with the field value
 mutate {
-  replace => { "${pathForMethod1}" => "%{${sourceFieldPlaceholder}}" }
+  replace => { "${tempObjName}.${relativePath}" => "%{${sourceFieldPlaceholder}}" }
+}
+${typeConversionBlock}
+# STEP 3: Merge the complete object into the repeated parent array
+mutate {
+  merge => { "${pathForParent}" => "${tempObjName}" }
 }
 
-# METHOD 2: 'merge' Pattern (for loops or cleaner objects)
-# Use this inside a 'for' loop to add a complete object to the array.
+# STEP 4: Clean up temporary fields
 mutate {
-  replace => {
-    "temp_object.${relativePath}" => "%{${sourceFieldPlaceholder}}"
-    # ... add other fields for this object to "temp_object" ...
-  }
+  remove_field => ["${sourceFieldPlaceholder}", "${tempObjName}"]
 }
-mutate {
-  merge => { "${pathForMethod2}" => "temp_object" }
-}`;
+
+# RESULT: Creates ${repeatedParentName} as an array with the nested field
+# For loops: Use this pattern inside 'for' to add multiple objects`;
         displayLogstashMapping = nestedFilterTemplate.trim();
 
     } else if (field.repeated) {
@@ -165,26 +170,19 @@ mutate {
 
 # --- OPTION 2: Source is a single value to be wrapped in an array ---
 # (e.g., source_ip: "192.168.1.1" → ip: ["192.168.1.1"])
-# Build a temp array with bracket notation, then rename.
+# Use merge with the field NAME to automatically create an array.
 mutate {
-  replace => { "temp_${field.name}[0]" => "%{${sourceFieldPlaceholder}}" }
-}
-mutate {
-  rename => { "temp_${field.name}" => "event.idm.read_only_udm.${rawUdmPath}" }
-}
-mutate {
-  remove_field => [ "${sourceFieldPlaceholder}" ]
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "${sourceFieldPlaceholder}" }
 }
 
 # --- OPTION 3: Source is multiple, separate fields ---
 # (e.g., source_A: "val1", source_B: "val2")
-# Build a temporary array with multiple values, then rename.
+# Merge each field name to build the array.
 mutate {
-  replace => { "temp_array[0]" => "%{source_field_A}" }
-  replace => { "temp_array[1]" => "%{source_field_B}" }
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "source_field_A" }
 }
 mutate {
-  rename => { "temp_array" => "event.idm.read_only_udm.${rawUdmPath}" }
+  merge => { "event.idm.read_only_udm.${rawUdmPath}" => "source_field_B" }
 }
 
 # --- OPTION 4: Source is already a correctly typed array ---

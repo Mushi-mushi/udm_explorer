@@ -48,38 +48,36 @@ mutate {
 }`
   },
   {
-    name: 'Building an Array (using bracket notation)',
-    description: 'To create a repeated UDM field from source data in Gostash, use bracket notation with indices to build an array. The bracket notation creates array elements when used in a temporary field, which can then be renamed to the final UDM path.',
+    name: 'Building an Array (using merge)',
+    description: 'To create a repeated UDM field from a single value in Gostash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Gostash automatically creates an array with that field\'s value.',
     example: `
 # SCENARIO 1: Single value → Array with one element
 # Source: "src_ip": "192.168.1.1"
 # Goal: "udm.principal.ip": ["192.168.1.1"]
 
+# IMPORTANT: Merge the field NAME (as string), not the value!
 mutate {
-  replace => { "temp_principal_ip[0]" => "%{src_ip}" }
-}
-mutate {
-  rename => { "temp_principal_ip" => "udm.principal.ip" }
-}
-mutate {
-  remove_field => [ "src_ip" ]
+  merge => { "udm.principal.ip" => "src_ip" }
 }
 
-# SCENARIO 2: Multiple separate fields → Array
-# Source: "primary_cat": "web", "secondary_cat": "proxy"
-# Goal: "udm.network.category_details": ["web", "proxy"]
+# The above creates: "udm.principal.ip": ["192.168.1.1"]
+# This is the proven pattern from working Chronicle parsers.
+
+# SCENARIO 2: Multiple separate fields → Array with multiple elements
+# Source: "email1": "user@example.com", "email2": "admin@example.com"
+# Goal: "udm.target.user.email_addresses": ["user@example.com", "admin@example.com"]
 
 mutate {
-  replace => { "temp_categories[0]" => "%{primary_cat}" }
-  replace => { "temp_categories[1]" => "%{secondary_cat}" }
+  merge => { "udm.target.user.email_addresses" => "email1" }
 }
 mutate {
-  rename => { "temp_categories" => "udm.network.category_details" }
+  merge => { "udm.target.user.email_addresses" => "email2" }
 }
 
-# NOTE: Using bracket notation directly on the final UDM path
-# (e.g., "udm.principal.ip[0]") creates a literal field with brackets
-# in the name, not an array. Always use a temp field approach.`
+# Each merge appends the value to the array.
+
+# NOTE: The key insight is that merge expects a FIELD NAME,
+# not a field value with %{} syntax. Gostash handles array creation.`
   },
   {
     name: 'mutate { merge }',
@@ -156,40 +154,66 @@ mutate {
   },
   {
     name: 'Mapping to Nested Repeated Fields',
-    description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.hostname`), you cannot map to it directly. You must first create an object within the array. There are two primary patterns for this.',
+    description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.nat_port` where `intermediary` is repeated), you cannot map to it directly. You must first create a temporary object with the nested field, then merge that object into the repeated parent array.',
     example: `
-# METHOD 1: Bracket Notation with 'replace' (for one-off mappings)
-# Use this when you are NOT in a loop and only need to create a SINGLE object.
-# The [0] index creates the array and its first element if they don't exist.
-# NOTE: Bracket notation is REQUIRED for this to work.
+# SCENARIO: Map a source field to a nested field inside a repeated parent
+# Example: risk_score → udm.intermediary.nat_port
+# Where 'intermediary' is marked as repeated in the UDM schema
 
+# IMPORTANT: The order is critical for this to work correctly!
+
+# STEP 1: Build the temporary object with the field value
 mutate {
-  replace => { "[udm][intermediary][0][hostname]" => "%{source_proxy_host}" }
+  replace => { "temp_intermediary_obj.nat_port" => "%{risk_score}" }
 }
+
+# STEP 2: Convert the type on the TEMP OBJECT field (not the source!)
+# This must happen AFTER building the object, BEFORE merging
 mutate {
-  replace => { "[udm][intermediary][0][ip]" => "%{source_proxy_ip}" }
+  convert => { "temp_intermediary_obj.nat_port" => "integer" }
 }
 
-# METHOD 2: The 'merge' Pattern (for loops or cleaner objects)
-# Use this when you ARE in a loop or need to add a complete object cleanly.
-# It involves creating a temporary object first.
-
-# 1. Build a temporary object.
+# STEP 3: Merge the complete object into the repeated parent array
 mutate {
-  replace => {
-    "temp_technique.id" => "%{record.techniqueId}"
-    "temp_technique.name" => "%{record.techniqueName}"
+  merge => { "udm.intermediary" => "temp_intermediary_obj" }
+}
+
+# STEP 4: Clean up temporary fields
+mutate {
+  remove_field => ["risk_score", "temp_intermediary_obj"]
+}
+
+# RESULT: Creates udm.intermediary as an array with one object:
+# "intermediary": [{"nat_port": 100}]
+
+# COMMON PATTERN in loops:
+# When processing multiple items, use this pattern inside a 'for' loop.
+# Each iteration creates a new temp object and merges it, building the array.
+
+for index, record in source_array {
+  mutate {
+    replace => {
+      "temp_obj.field1" => "%{record.value1}"
+      "temp_obj.field2" => "%{record.value2}"
+    }
+  }
+  mutate {
+    convert => { "temp_obj.field1" => "integer" }
+  }
+  mutate {
+    merge => { "udm.repeated_parent" => "temp_obj" }
   }
 }
 
-# 2. Merge the complete object into the array.
 mutate {
-  merge => { "udm.security_result.attack_details.techniques" => "temp_technique" }
+  remove_field => ["temp_obj"]
 }
 
-# RECOMMENDATION:
-# - Use the bracket notation with 'replace' for simple, one-off mappings.
-# - ALWAYS use the 'merge' pattern when iterating in a 'for' loop to ensure each item is added as a new, complete object in the array.
+# KEY POINTS:
+# 1. Always build temp object with 'replace' first
+# 2. Convert types on temp object fields (not source fields)
+# 3. Merge temp object into repeated parent
+# 4. Clean up temp objects after use
 `
   },
   {

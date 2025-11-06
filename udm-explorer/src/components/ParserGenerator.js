@@ -216,7 +216,8 @@ const ParserGenerator = () => {
       startIndex = 1;
     }
 
-    // Traverse the path and check if ANY field in the path is repeated
+    // Traverse the path - we only care if the FINAL field is repeated
+    // Parent repeated fields create different structures (merge into objects)
     for (let i = startIndex; i < pathParts.length; i++) {
       if (!currentNode || !currentNode.children) return false;
 
@@ -227,9 +228,9 @@ const ParserGenerator = () => {
 
       if (!nextNode) return false;
 
-      // Check if ANY field in the path is repeated (not just the last one)
-      if (nextNode.repeated === true) {
-        return true;
+      // Only check if the FINAL field in the path is repeated
+      if (i === pathParts.length - 1) {
+        return nextNode.repeated === true;
       }
 
       // If this node has a type, look it up in the type map to continue traversal
@@ -241,6 +242,54 @@ const ParserGenerator = () => {
     }
 
     return false;
+  };
+
+  // Check if a field has a repeated parent in its path
+  const hasRepeatedParent = (udmPath) => {
+    if (!udmPath) return null;
+
+    const cleanPath = cleanUdmPath(udmPath);
+    const pathParts = cleanPath.split('.');
+
+    // Determine if this is event or entity path
+    let startIndex = 0;
+    let currentNode = udmEvent;
+
+    if (pathParts[0] === 'entity') {
+      currentNode = udmEntity;
+      startIndex = 1;
+    } else if (pathParts[0] === 'event') {
+      startIndex = 1;
+    }
+
+    // Traverse the path and check if ANY parent field is repeated
+    for (let i = startIndex; i < pathParts.length - 1; i++) { // -1 because we don't check the final field
+      if (!currentNode || !currentNode.children) return null;
+
+      const fieldName = pathParts[i];
+      const nextNode = currentNode.children.find(child =>
+        child.name.toLowerCase() === fieldName.toLowerCase()
+      );
+
+      if (!nextNode) return null;
+
+      // If this parent is repeated, return info about it
+      if (nextNode.repeated === true) {
+        return {
+          repeatedParent: pathParts.slice(0, i + 1).join('.'),
+          relativePath: pathParts.slice(i + 1).join('.')
+        };
+      }
+
+      // If this node has a type, look it up in the type map to continue traversal
+      if (nextNode.type && typeMap[nextNode.type]) {
+        currentNode = typeMap[nextNode.type];
+      } else {
+        currentNode = nextNode;
+      }
+    }
+
+    return null;
   };
 
   // Generate Gostash parser
@@ -267,15 +316,21 @@ filter {
     const timestampMappings = [];
     const arrayMappings = [];
     const repeatedMappings = [];
+    const nestedInRepeatedMappings = [];
 
     mappings.forEach(mapping => {
       if (!mapping.udmPath) return;
 
       const udmType = detectUdmType(mapping.udmPath);
       const isRepeated = isRepeatedField(mapping.udmPath);
+      const repeatedParentInfo = hasRepeatedParent(mapping.udmPath);
 
-      // Check if the UDM field itself is repeated (takes precedence)
-      if (isRepeated) {
+      // Check if nested inside a repeated parent (highest precedence)
+      if (repeatedParentInfo) {
+        nestedInRepeatedMappings.push({...mapping, repeatedParentInfo});
+      }
+      // Check if the UDM field itself is repeated
+      else if (isRepeated) {
         repeatedMappings.push(mapping);
       } else if (mapping.sourceType === 'array') {
         arrayMappings.push(mapping);
@@ -344,19 +399,47 @@ filter {
           parser += `  }\n`;
         } else {
           // Source is a single value that needs to go into an array
-          // Create temp array with bracket notation, then rename
-          const tempField = `temp_${cleanPath.replace(/\./g, '_')}`;
-          parser += `  # Source is a single value, wrap in array using temp field\n`;
+          // Use merge with field name (not value) to create array automatically
+          parser += `  # Source is a single value, merge creates array automatically\n`;
           parser += `  mutate {\n`;
-          parser += `    replace => { "${tempField}[0]" => "%{${m.sourcePath}}" }\n`;
-          parser += `  }\n`;
-          parser += `  mutate {\n`;
-          parser += `    rename => { "${tempField}" => "event.idm.read_only_udm.${cleanPath}" }\n`;
-          parser += `  }\n`;
-          parser += `  mutate {\n`;
-          parser += `    remove_field => [ "${m.sourcePath}" ]\n`;
+          parser += `    merge => { "event.idm.read_only_udm.${cleanPath}" => "${m.sourcePath}" }\n`;
           parser += `  }\n`;
         }
+        parser += `\n`;
+      });
+    }
+
+    // Generate mappings for fields nested inside repeated parents
+    if (nestedInRepeatedMappings.length > 0) {
+      parser += `\n  # Map fields nested in repeated parent objects\n`;
+      nestedInRepeatedMappings.forEach(m => {
+        const cleanPath = cleanUdmPath(m.udmPath);
+        const {repeatedParent, relativePath} = m.repeatedParentInfo;
+        const udmType = detectUdmType(m.udmPath);
+        const tempObjName = `temp_${repeatedParent.replace(/\./g, '_')}_obj`;
+
+        parser += `  # Field nested in repeated parent: ${m.sourcePath} -> event.idm.read_only_udm.${cleanPath}\n`;
+        parser += `  # Parent '${repeatedParent}' is repeated, so we build an object and merge it\n`;
+
+        // First, build the temp object with the value
+        parser += `  mutate {\n`;
+        parser += `    replace => { "${tempObjName}.${relativePath}" => "%{${m.sourcePath}}" }\n`;
+        parser += `  }\n`;
+
+        // Then handle type conversion on the temp object field if needed
+        if (m.sourceType === 'number' || udmType === 'integer' || udmType === 'float') {
+          const convertType = udmType === 'float' ? 'float' : 'integer';
+          parser += `  mutate {\n`;
+          parser += `    convert => { "${tempObjName}.${relativePath}" => "${convertType}" }\n`;
+          parser += `  }\n`;
+        }
+
+        parser += `  mutate {\n`;
+        parser += `    merge => { "event.idm.read_only_udm.${repeatedParent}" => "${tempObjName}" }\n`;
+        parser += `  }\n`;
+        parser += `  mutate {\n`;
+        parser += `    remove_field => [ "${m.sourcePath}", "${tempObjName}" ]\n`;
+        parser += `  }\n`;
         parser += `\n`;
       });
     }
