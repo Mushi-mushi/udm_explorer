@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "https://mushi-mushi.github.io/udm_explorer/alpha/static/css/main.a4279d3d.css",
+    "main.js": "https://mushi-mushi.github.io/udm_explorer/alpha/static/js/main.371afb9a.js",
+    "static/js/453.c7d0144f.chunk.js": "https://mushi-mushi.github.io/udm_explorer/alpha/static/js/453.c7d0144f.chunk.js",
+    "index.html": "https://mushi-mushi.github.io/udm_explorer/alpha/index.html",
+    "main.a4279d3d.css.map": "https://mushi-mushi.github.io/udm_explorer/alpha/static/css/main.a4279d3d.css.map",
+    "main.371afb9a.js.map": "https://mushi-mushi.github.io/udm_explorer/alpha/static/js/main.371afb9a.js.map",
+    "453.c7d0144f.chunk.js.map": "https://mushi-mushi.github.io/udm_explorer/alpha/static/js/453.c7d0144f.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a4279d3d.css",
+    "static/js/main.371afb9a.js"
+  ]
+}
