@@ -13,20 +13,6 @@ mutate {
 }`
   },
   {
-    name: 'mutate { replace }',
-    description: 'Overwrites the value of a field. This can be used for static assignment, dynamically building strings, or initializing fields at the start of a pipeline.',
-    example: `
-# Statically sets the product name.
-mutate {
-  replace => { "udm.metadata.product_name" => "ThreatConnect" }
-}
-
-# Build a string by joining existing fields.
-mutate {
-  replace => { "joined_names" => "%{first_name} %{last_name}" }
-}`
-  },
-  {
     name: 'mutate { copy }',
     description: 'Copies the value of a field to a new field, leaving the original field intact. This is useful when you need the same data in two different places.',
     example: `
@@ -48,25 +34,52 @@ mutate {
 }`
   },
   {
-    name: 'mutate { add_field }',
-    description: 'Adds a new field with a static or dynamic value. This is perfect for setting UDM enum fields based on some logic, or for creating fields that don\'t exist in the source log.',
+    name: 'mutate { replace }',
+    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Gostash (SecOps), this replaces the standard Logstash `add_field` operation.',
     example: `
 # Statically sets the 'event_type' to a UDM enum value.
 mutate {
-  add_field => { "udm.metadata.event_type" => "USER_LOGIN" }
+  replace => { "udm.metadata.event_type" => "USER_LOGIN" }
+}
+
+# Build a string by joining existing fields.
+mutate {
+  replace => { "joined_names" => "%{first_name} %{last_name}" }
 }`
   },
   {
-    name: 'Building an Array (`add_field`)',
-    description: 'A special behavior of `add_field` is that if you add a value to a field that already exists, it will automatically convert that field into an array containing both the old and new values. This is the primary way to create a repeated UDM field from multiple separate source fields.',
+    name: 'Building an Array (using bracket notation)',
+    description: 'To create a repeated UDM field from source data in Gostash, use bracket notation with indices to build an array. The bracket notation creates array elements when used in a temporary field, which can then be renamed to the final UDM path.',
     example: `
-# Source has: "primary_cat": "web", "secondary_cat": "proxy"
-# Goal is: "udm.network.category_details": ["web", "proxy"]
+# SCENARIO 1: Single value → Array with one element
+# Source: "src_ip": "192.168.1.1"
+# Goal: "udm.principal.ip": ["192.168.1.1"]
 
 mutate {
-  add_field => { "udm.network.category_details" => "%{primary_cat}" }
-  add_field => { "udm.network.category_details" => "%{secondary_cat}" }
-}`
+  replace => { "temp_principal_ip[0]" => "%{src_ip}" }
+}
+mutate {
+  rename => { "temp_principal_ip" => "udm.principal.ip" }
+}
+mutate {
+  remove_field => [ "src_ip" ]
+}
+
+# SCENARIO 2: Multiple separate fields → Array
+# Source: "primary_cat": "web", "secondary_cat": "proxy"
+# Goal: "udm.network.category_details": ["web", "proxy"]
+
+mutate {
+  replace => { "temp_categories[0]" => "%{primary_cat}" }
+  replace => { "temp_categories[1]" => "%{secondary_cat}" }
+}
+mutate {
+  rename => { "temp_categories" => "udm.network.category_details" }
+}
+
+# NOTE: Using bracket notation directly on the final UDM path
+# (e.g., "udm.principal.ip[0]") creates a literal field with brackets
+# in the name, not an array. Always use a temp field approach.`
   },
   {
     name: 'mutate { merge }',
@@ -126,10 +139,10 @@ for index, value in source_ports_array {
   mutate {
     # a. Create a temporary field for the current string value ("80").
     replace => { "temp_port" => "%{value}" }
-    
+
     # b. Convert the temporary field to an integer.
     convert => { "temp_port" => "integer" }
-    
+
     # c. Merge the converted integer into a new array.
     merge => { "converted_ports_array" => "temp_port" }
   }
@@ -145,14 +158,16 @@ mutate {
     name: 'Mapping to Nested Repeated Fields',
     description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.hostname`), you cannot map to it directly. You must first create an object within the array. There are two primary patterns for this.',
     example: `
-# METHOD 1: The 'add_field' Shortcut (for one-off mappings)
+# METHOD 1: Bracket Notation with 'replace' (for one-off mappings)
 # Use this when you are NOT in a loop and only need to create a SINGLE object.
 # The [0] index creates the array and its first element if they don't exist.
 # NOTE: Bracket notation is REQUIRED for this to work.
 
 mutate {
-  add_field => { "[udm][intermediary][0][hostname]" => "%{source_proxy_host}" }
-  add_field => { "[udm][intermediary][0][ip]" => "%{source_proxy_ip}" }
+  replace => { "[udm][intermediary][0][hostname]" => "%{source_proxy_host}" }
+}
+mutate {
+  replace => { "[udm][intermediary][0][ip]" => "%{source_proxy_ip}" }
 }
 
 # METHOD 2: The 'merge' Pattern (for loops or cleaner objects)
@@ -173,7 +188,7 @@ mutate {
 }
 
 # RECOMMENDATION:
-# - Use the 'add_field' shortcut for simple, one-off mappings.
+# - Use the bracket notation with 'replace' for simple, one-off mappings.
 # - ALWAYS use the 'merge' pattern when iterating in a 'for' loop to ensure each item is added as a new, complete object in the array.
 `
   },
@@ -215,12 +230,12 @@ date {
     example: `
 # Maps event type based on a source event ID.
 if [event_id] == 4624 {
-  mutate { add_field => { "udm.metadata.event_type" => "USER_LOGIN" } }
+  mutate { replace => { "udm.metadata.event_type" => "USER_LOGIN" } }
 }
 
 # Sets a category if the message contains the word "malicious".
 if [message] =~ "malicious" {
-  mutate { add_field => { "udm.security_result.threat_severity" => "CRITICAL" } }
+  mutate { replace => { "udm.security_result.threat_severity" => "CRITICAL" } }
 }`
   },
   {
@@ -259,12 +274,12 @@ mutate {
 ];
 
 const ArrowIcon = ({ isExpanded }) => (
-    <motion.svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-5 w-5 transition-transform flex-shrink-0" 
-        viewBox="0 0 20 20" 
-        fill="currentColor" 
-        animate={{ rotate: isExpanded ? 90 : 0 }} 
+    <motion.svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5 transition-transform flex-shrink-0"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        animate={{ rotate: isExpanded ? 90 : 0 }}
         transition={{ duration: 0.2 }}
     >
       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -279,7 +294,7 @@ const LogstashPanel = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}

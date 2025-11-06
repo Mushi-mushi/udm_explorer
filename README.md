@@ -1,106 +1,337 @@
 # UDM Explorer
 
-UDM Explorer is a small React-based web UI for exploring the Unified Data Model (UDM) schema stored in this repository. The frontend is in the `udm-explorer/` folder and the canonical schema files are in `udm-schema/`.
+UDM Explorer is a comprehensive React-based web application for exploring Google Security Operations (SecOps) Unified Data Model (UDM) schema and generating Gostash (Logstash) parsing configurations. The application provides an interactive interface to browse UDM Event and Entity models, search fields, filter by use cases, and automatically generate Gostash mapping code.
 
-## Repo layout
+## Features
 
-- `udm-explorer/` — Create React App UI (package.json inside this folder)
-  - `src/` — React source (entry: `src/index.js`, main app: `src/App.js`)
-  - `public/` — static public assets
-  - `package.json` — app dependencies and scripts
-- `udm-schema/` — JSON schema files describing UDM types
-  - `udm-event.json` — root event type (see `metadata`, `principal`, `target`, etc.)
-  - `fields/` — individual field definitions (some files may be empty/placeholders)
+### � Parser Generator (NEW!)
+Automatically generate complete Gostash parser configurations from sample JSON logs:
+- **Paste Sample JSON**: Input a sample log event in JSON format
+- **Auto-detect Fields**: Automatically extracts all fields, including nested objects and arrays
+- **Interactive Mapping**: Click to map source fields to UDM paths
+- **Smart Type Detection**: Automatically detects timestamps, integers, and other data types
+- **Complete Parser Output**: Generates production-ready Gostash filter configurations with:
+  - JSON parsing with error handling
+  - Timestamp field parsing
+  - Numeric type conversions
+  - String field mappings
+  - Array handling guidance
+  - Event finalization with `@output`
+  - Field cleanup
+- **One-Click Copy**: Copy the entire generated parser to clipboard
 
-## Quick start (local development)
+### �📋 Dual Schema Exploration
+- **Event Model**: Explore the complete UDM Event schema with all nested fields
+- **Entity Model**: Browse the UDM Entity schema structure
+- Switch seamlessly between models with preserved search and filter states
 
-Prerequisites: Node.js (LTS recommended) and npm installed.
+### 🔍 Advanced Search & Filtering
+- **Text Search**: Find fields by name or search for "repeated" to show all array fields
+- **Use Case Filtering**: Filter fields by key use cases (e.g., authentication, network, threat detection)
+- **Smart Highlighting**: Search matches are highlighted in the tree for easy identification
+- **Auto-Expansion**: Tree automatically expands to show matching fields
 
-Open a PowerShell terminal and run:
+### 🎯 Interactive Field Details
+- Select any field to view comprehensive details:
+  - Full field path (with copy-to-clipboard)
+  - Field type and description
+  - Key field use case tags
+  - Enum values (if applicable)
+- Animated transitions for smooth user experience
 
-```powershell
-cd udm-explorer
-npm install
-npm start
+### ⚙️ Automatic Gostash Code Generation
+The app generates production-ready Gostash filter configurations for every field type:
+
+- **Simple Fields**: Automatic `mutate { rename }` or `convert` + `rename` patterns
+- **Timestamp Fields**: `date` filter configurations with ISO8601 parsing
+- **Boolean Fields**: Complete conditional logic for boolean conversion
+- **Enum Fields**: Static assignment with selectable enum values
+- **Repeated Fields**: Multi-pattern solutions including:
+  - Split from delimited strings
+  - Build arrays from multiple fields
+  - Type conversion within loops
+- **Nested Repeated Fields**: Both bracket-notation and merge-pattern approaches
+- **Copy-to-Clipboard**: One-click copy for all generated configurations
+
+### 📚 Gostash Operations Reference
+Comprehensive, interactive documentation for all Gostash operations:
+- `mutate` variants (rename, replace, copy, convert, merge, split, gsub, remove_field)
+- Array processing with `for` loops
+- `grok` pattern matching
+- `date` timestamp parsing
+- Conditional logic (`if/else`)
+- Error handling (`on_error`)
+- Debugging (`statedump`)
+- Finalization patterns (`@output`)
+
+Each operation includes:
+- Detailed description
+- Real-world examples
+- Best practices and common patterns
+
+### 🎨 Modern UI/UX
+- **Solarized Dark Theme**: Easy on the eyes for extended use
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Framer Motion Animations**: Smooth transitions and interactions
+- **Tailwind CSS**: Clean, modern styling
+
+## Repository Structure
+
+```
+udm_explorer/
+├── README.md                          # This file
+├── example-logs.json                  # Sample JSON logs for testing
+└── udm-explorer/                      # React application
+    ├── package.json                   # Dependencies and scripts
+    ├── tailwind.config.js             # Tailwind CSS configuration
+    ├── postcss.config.js              # PostCSS configuration
+    ├── public/                        # Static assets
+    │   ├── index.html
+    │   ├── manifest.json
+    │   └── robots.txt
+    └── src/                           # Application source code
+        ├── index.js                   # Entry point
+        ├── App.js                     # Main app component
+        ├── index.css                  # Global styles
+        ├── components/                # React components
+        │   ├── UdmField.js           # Tree node component
+        │   ├── DetailsPanel.js       # Field details & Gostash generation
+        │   ├── LogstashPanel.js      # Operations reference
+        │   └── ParserGenerator.js    # Parser generator tool
+        └── data/                      # UDM schema definitions (40+ JSON files)
+            ├── udm-event.json        # Root event schema
+            ├── udm-entity.json       # Root entity schema
+            ├── udm-metadata.json
+            ├── udm-network.json
+            ├── udm-security_result.json
+            └── ...                    # Additional schema files
 ```
 
-The dev server runs on http://localhost:3000 by default.
+## Quick Start (Local Development)
 
-## Build (production)
+**Prerequisites**: Node.js (LTS recommended) and npm installed.
+
+1. Open PowerShell and navigate to the application folder:
+   ```powershell
+   cd udm-explorer
+   ```
+
+2. Install dependencies:
+   ```powershell
+   npm install
+   ```
+
+3. Start the development server:
+   ```powershell
+   npm start
+   ```
+
+4. Open your browser to http://localhost:3000
+
+The app will automatically reload when you make changes to the source code.
+
+## Using the Parser Generator
+
+The Parser Generator is a powerful tool that converts sample JSON logs into complete Gostash parser configurations:
+
+### Step 1: Prepare Your Sample JSON
+Get a representative sample event from your log source. For example:
+```json
+{
+  "timestamp": "2024-01-15T10:30:45Z",
+  "event_type": "authentication",
+  "src_ip": "192.168.1.100",
+  "user": "john.doe@example.com",
+  "result": "success",
+  "bytes_sent": 1024,
+  "threat_indicators": ["malware", "phishing"]
+}
+```
+
+### Step 2: Parse and Map Fields
+1. Click the **Parser Generator** tab
+2. Paste your JSON into the text area
+3. Click **Parse JSON**
+4. For each source field you want to map:
+   - Click **Add Mapping**
+   - Enter the UDM path (e.g., `udm.principal.ip`)
+   - Use the schema explorer tabs to find the correct UDM paths
+5. Click **Generate Parser**
+
+### Step 3: Review and Use
+- Review the generated Gostash configuration
+- Click **Copy Parser** to copy to clipboard
+- Test in your development environment
+- Adjust as needed for your specific requirements
+
+### Example Mappings
+Common field mappings:
+- Source IP → `udm.principal.ip`
+- Destination IP → `udm.target.ip`
+- Username → `udm.principal.user.userid`
+- Event timestamp → `udm.metadata.event_timestamp`
+- Event type → `udm.metadata.event_type`
+- Bytes sent → `udm.network.sent_bytes`
+
+**Tip**: See `example-logs.json` in the repository root for sample JSON events you can use to test the Parser Generator.
+
+## Build for Production
 
 From the `udm-explorer` folder:
 
 ```powershell
-cd udm-explorer
 npm run build
 ```
 
-This produces a static build in `udm-explorer/build/`.
+This produces an optimized static build in `udm-explorer/build/` ready for deployment.
 
-## Publishing updates
+## Deployment Options
 
-This project is a web app living in the `udm-explorer/` subfolder. Below are common deployment options; choose the one that matches your hosting provider.
+### Option A: GitHub Pages (Configured & Ready)
 
-Option A — GitHub Pages (recommended for quick static hosting)
-1. In `udm-explorer/package.json` add a `homepage` field (replace `<GH_USER>` and `<REPO>`):
+The project is already configured for GitHub Pages deployment with:
+- `homepage` set in `package.json`
+- `gh-pages` package installed
+- Deploy scripts configured
 
-```json
-"homepage": "https://<GH_USER>.github.io/<REPO>"
-```
-
-2. Install the `gh-pages` package and add deploy scripts:
+To deploy:
 
 ```powershell
 cd udm-explorer
-npm install --save-dev gh-pages
-# edit package.json to add:
-# "scripts": { "predeploy": "npm run build", "deploy": "gh-pages -d build" }
 npm run deploy
 ```
 
-Notes: Because the app lives in `udm-explorer/`, these commands should be run from that folder. GitHub Pages will serve the files from the `gh-pages` branch automatically.
+This will build and push to the `gh-pages` branch. Access at: https://mushi-mush.github.io/udm_explorer/
 
-Option B — Vercel (recommended for continuous deployments)
-1. Sign in at https://vercel.com and import the GitHub repository.
-2. Set the project root/path to `udm-explorer` during import.
-3. Set Build Command: `npm run build` and Output Directory: `build`.
-4. Vercel will deploy on each push to the connected branch.
+### Option B: Vercel (Continuous Deployment)
 
-Option C — Netlify
-1. Connect the GitHub repository in Netlify, set the publish directory to `udm-explorer`/`build` and the build command to `npm run build`.
-2. Alternatively, build locally and drag/upload the `build/` folder to Netlify.
+1. Sign in at https://vercel.com
+2. Import the GitHub repository
+3. Configure:
+   - **Root Directory**: `udm-explorer`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `build`
+4. Deploy automatically on every push
 
-Option D — Manual/static hosting (S3, Cloudflare Pages, Azure Static Web Apps)
-1. Run `npm run build` in `udm-explorer/`.
-2. Upload the contents of `udm-explorer/build/` to your static host of choice.
+### Option C: Netlify
 
-## Release & publishing workflow (git-centric)
+1. Connect the repository in Netlify
+2. Configure:
+   - **Base directory**: `udm-explorer`
+   - **Build command**: `npm run build`
+   - **Publish directory**: `udm-explorer/build`
 
-A simple flow to publish an update (PowerShell commands):
+### Option D: Manual/Static Hosting
+
+Build locally and upload `udm-explorer/build/` to any static host:
+- AWS S3 + CloudFront
+- Azure Static Web Apps
+- Cloudflare Pages
+- Any web server (nginx, Apache, IIS)
+
+## Technology Stack
+
+- **React 19**: Modern UI framework with hooks
+- **Tailwind CSS 3**: Utility-first CSS framework
+- **Framer Motion 12**: Animation library for smooth transitions
+- **Create React App**: Development tooling and build configuration
+
+## Schema Data Files
+
+The application loads 40+ JSON schema files representing the complete UDM structure:
+
+- **Core Types**: Event, Entity, Metadata, Noun
+- **Network**: Network, Location, LatLng
+- **Security**: SecurityResult, AttackDetails, Tactic, Technique
+- **Assets**: Asset, Resource, Cloud
+- **Identity**: User, Group, Role, Permission
+- **Files**: File, FileMetadata variants, X509 certificates
+- **Verdicts**: VerdictInfo, ThreatVerdict, IoCStats
+- **Risk**: EntityRisk, RiskDelta
+- **Processes**: Process, Registry
+- **Other**: Label, Attribute, Investigation, Metric, TimeOff
+
+Each schema file is automatically hydrated and assembled into a complete, navigable tree structure.
+
+## Development Workflow
+
+### Making Changes
 
 ```powershell
-# from repo root
-git checkout -b feature/my-change
-# make changes, then stage and commit
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Make changes, then stage and commit
 git add -A
-git commit -m "Implement: description of change"
-# push branch and open PR on GitHub
-git push -u origin feature/my-change
-# after PR merged to main, create a release tag
-git checkout main
-git pull origin main
-git tag -a v1.0.1 -m "Release v1.0.1"
-git push origin main --tags
+git commit -m "Add: description of your change"
+
+# Push and create a pull request
+git push -u origin feature/your-feature-name
 ```
 
-Optionally, use GitHub Releases UI to add release notes and attach build artifacts.
+### Adding New Schema Files
 
-## Notes & tips
+1. Add the JSON file to `src/data/`
+2. Import it in `App.js`
+3. Add the type mapping to `templateMap` if it's a complex type
+4. The tree will automatically hydrate nested fields
 
-- The authoritative schema is the JSON under `udm-schema/` (e.g. `udm-event.json`). Make small edits there and reflect any UI changes in `udm-explorer/src/`.
-- `udm-explorer/package.json` currently contains Tailwind/Tailwind-related devDependencies. If you plan to add or change CSS tooling, update those packages carefully and run a local build.
-- Some `udm-schema/fields/` files may be placeholders; review them before relying on them in UI features.
+### Updating Gostash Patterns
 
-## Need help or want changes?
+Edit the generation logic in `src/components/DetailsPanel.js`:
+- Field type detection: ~line 50-150
+- Nested repeated logic: ~line 65-100
+- Simple field patterns: ~line 110-140
 
-If you want this README adjusted (more hosting providers, CI steps, or automated deploy via GitHub Actions), tell me which provider or CI you prefer and I will add concrete scripts and examples.
+### Adding Gostash Operations
+
+Edit the `logstashOperations` array in `src/components/LogstashPanel.js`:
+- Add new operation objects with `name`, `description`, and `example`
+
+## Troubleshooting
+
+### Build Errors
+
+If you encounter build errors:
+```powershell
+# Clear node_modules and reinstall
+rm -r node_modules
+npm install
+
+# Clear cache
+npm cache clean --force
+```
+
+### Port Already in Use
+
+If port 3000 is taken, create a `.env` file in `udm-explorer/`:
+```
+PORT=3001
+```
+
+### Deployment Issues
+
+For GitHub Pages 404 errors:
+- Ensure `homepage` in `package.json` matches your repository name
+- Check that the `gh-pages` branch exists and is set as the source
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with clear commit messages
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is internal to Nestlé. Refer to your organization's policies for usage and distribution.
+
+## Support & Contact
+
+For questions, issues, or feature requests, please open an issue on the GitHub repository or contact the development team.
+
+---
+
+**Note**: This application is designed for Google SecOps (Chronicle) UDM schema exploration and Gostash parser development. It is not affiliated with or endorsed by Google.
