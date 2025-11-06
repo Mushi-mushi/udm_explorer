@@ -20,7 +20,6 @@ const DetailsPanel = ({ field, fullPathArray }) => {
     const remainingParts = pathArray.slice(1);
     let pathString = remainingParts.map(p => p.name).join('.');
     
-    // Lowercase the very first part of the path string for display
     const firstSegment = remainingParts[0]?.name.toLowerCase();
     const restOfPath = pathString.substring(pathString.indexOf('.') + 1);
     
@@ -49,50 +48,121 @@ const DetailsPanel = ({ field, fullPathArray }) => {
     const parentPath = fullPathArray ? fullPathArray.slice(0, -1) : [];
     const isNestedInRepeated = parentPath.some(segment => segment.repeated);
 
-    // --- A. Handle fields nested in REPEATED objects (Special Case) ---
     if (isNestedInRepeated) {
-        let logstashTargetPath = '[udm]';
-        let isFirstRepeatedFound = false;
-
+        let pathForMethod1 = '[udm]';
+        let isFirstRepeatedFound_M1 = false;
         fullPathArray.slice(1).forEach((segment, index) => {
-            // FIX: Lowercase the first segment name (e.g., "Event" -> "event")
             const segmentName = index === 0 ? segment.name.toLowerCase() : segment.name;
-            logstashTargetPath += `[${segmentName}]`;
-            
-            // Add the [0] index immediately after the first repeated parent
-            if (segment.repeated && !isFirstRepeatedFound) {
-                logstashTargetPath += '[0]';
-                isFirstRepeatedFound = true;
+            pathForMethod1 += `[${segmentName}]`;
+            if (segment.repeated && !isFirstRepeatedFound_M1) {
+                pathForMethod1 += '[0]';
+                isFirstRepeatedFound_M1 = true;
             }
         });
-        
-        const nestedFilterTemplate = `mutate {
-  # NOTE: Bracket notation is required here to target an array element.
-  # This creates an array with one object and sets the nested field,
-  # which is a common pattern for parsing single, related entities.
-  add_field => { "${logstashTargetPath}" => "%{${sourceFieldPlaceholder}}" }
-}`;
-        displayLogstashMapping = nestedFilterTemplate;
 
-    // --- B. Handle all other fields ---
-    } else if (field.repeated) {
-      if (fieldType === 'string') {
-        const splitFilterTemplate = `mutate {
-  # This splits a source string (e.g., "value1,value2") into an array.
-  split => { "${sourceFieldPlaceholder}" => "," }
+        let pathSegmentsForParent = [];
+        let relativePathSegments = [];
+        let isFirstRepeatedFound_M2 = false;
+        for (const segment of fullPathArray.slice(1)) {
+            if (isFirstRepeatedFound_M2) {
+                relativePathSegments.push(segment.name);
+            } else {
+                pathSegmentsForParent.push(segment.name);
+            }
+            if (segment.repeated) {
+                isFirstRepeatedFound_M2 = true;
+            }
+        }
+        if (pathSegmentsForParent.length > 0) {
+            pathSegmentsForParent[0] = pathSegmentsForParent[0].toLowerCase();
+        }
+        const pathForMethod2 = 'udm.' + pathSegmentsForParent.join('.');
+        const relativePath = relativePathSegments.join('.');
+
+        const nestedFilterTemplate = `
+# To map a field inside a repeated object, you have two main patterns.
+
+# METHOD 1: 'add_field' Shortcut (for one-off mappings)
+# Use this when you are NOT in a loop. NOTE: Bracket notation is required.
+mutate {
+  add_field => { "${pathForMethod1}" => "%{${sourceFieldPlaceholder}}" }
+}
+
+# METHOD 2: 'merge' Pattern (for loops or cleaner objects)
+# Use this inside a 'for' loop to add a complete object to the array.
+mutate {
+  replace => {
+    "temp_object.${relativePath}" => "%{${sourceFieldPlaceholder}}"
+    # ... add other fields for this object to "temp_object" ...
+  }
 }
 mutate {
-  # Then, rename the new array to the UDM field.
+  merge => { "${pathForMethod2}" => "temp_object" }
+}`;
+        displayLogstashMapping = nestedFilterTemplate.trim();
+
+    } else if (field.repeated) {
+      let repeatedFilterTemplate = `# Mapping to a repeated field requires knowing the source format. Choose one option below.
+
+# --- OPTION 1: Source is a single, delimited string ---
+# (e.g., source_field: "val1,val2,val3")
+# 1. Use 'split' to turn the string into an array of strings.
+mutate {
+  split => { "${sourceFieldPlaceholder}" => "," }
+}`;
+      
+      if (fieldType.startsWith('int') || fieldType.startsWith('uint') || fieldType.startsWith('float') || fieldType.startsWith('double')) {
+        const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
+        repeatedFilterTemplate += `
+
+# 2. Since 'convert' doesn't work on array elements in Gostash,
+#    we must loop through the array to convert each item.
+for index, value in ${sourceFieldPlaceholder} {
+  mutate {
+    # a. Create a temporary field for the current value.
+    replace => { "temp_value" => "%{value}" }
+    # b. Convert the temporary field to the correct numeric type.
+    convert => { "temp_value" => "${numericType}" }
+    # c. Merge the converted value into a new temporary array.
+    merge   => { "temp_converted_array" => "temp_value" }
+  }
+}
+
+# 3. Rename the new array of numbers to the final UDM field.
+mutate {
+  rename => { "temp_converted_array" => "udm.${formattedPath}" }
+}
+
+# 4. Clean up the original source and temporary fields.
+mutate {
+  remove_field => [ "${sourceFieldPlaceholder}", "temp_value" ]
+}`;
+      } else { // For repeated strings
+        repeatedFilterTemplate += `
+
+# 2. Finally, rename the prepared array to the UDM field.
+mutate {
   rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
 }`;
-        displayLogstashMapping = splitFilterTemplate;
-      } else {
-        const renameFilterTemplate = `mutate {
-  # This assumes the source field is already a correctly typed array.
-  rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
-}`;
-        displayLogstashMapping = renameFilterTemplate;
       }
+
+      repeatedFilterTemplate += `
+
+# --- OPTION 2: Source is multiple, separate fields ---
+# (e.g., source_A: "val1", source_B: "val2")
+# Use 'add_field' repeatedly to the same target to build an array.
+mutate {
+  add_field => { "udm.${formattedPath}" => "%{source_field_A}" }
+  add_field => { "udm.${formattedPath}" => "%{source_field_B}" }
+}
+
+# --- OPTION 3: Source is already a correctly typed array ---
+# This is the simplest case. Just rename the field.
+# mutate {
+#   rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
+# }`;
+      displayLogstashMapping = repeatedFilterTemplate;
+
     } else {
       const udmPathString = `udm.${formattedPath}`;
       if (fieldType.includes('timestamp')) {
@@ -115,7 +185,9 @@ mutate {
     navigator.clipboard.writeText(displayLogstashMapping).then(() => {
       setIsLogstashCopied(true);
       setTimeout(() => setIsLogstashCopied(false), 2000);
-    }).catch(err => console.error('Failed to copy Logstash mapping: ', err));
+    }).catch(err => {
+      console.error('Failed to copy Logstash mapping: ', err);
+    });
   };
   
   const handleEnumValueSelect = (value) => {
@@ -130,16 +202,32 @@ mutate {
     >
       <AnimatePresence mode="wait">
         {!field ? (
-          <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center text-solarized-base00">
+          <motion.div 
+            key="placeholder" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="text-center text-solarized-base00"
+          >
             Select a field to see its details.
           </motion.div>
         ) : (
-          <motion.div key={field.name} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="space-y-6">
+          <motion.div 
+            key={field.name} 
+            initial={{ opacity: 0, y: 15 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -15 }} 
+            transition={{ duration: 0.25 }} 
+            className="space-y-6"
+          >
             <div>
               {formattedPath && (
                 <div className="flex items-center justify-between gap-3 mb-2">
                   <p className="text-solarized-base00 font-mono text-sm break-all">{formattedPath}</p>
-                  <button onClick={handlePathCopyClick} className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0">
+                  <button 
+                    onClick={handlePathCopyClick} 
+                    className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0"
+                  >
                     {isPathCopied ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
@@ -166,7 +254,10 @@ mutate {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xl font-bold text-solarized-base1">Logstash Mapping</h3>
-                  <button onClick={handleLogstashCopyClick} className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0">
+                  <button 
+                    onClick={handleLogstashCopyClick} 
+                    className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0"
+                  >
                     {isLogstashCopied ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
