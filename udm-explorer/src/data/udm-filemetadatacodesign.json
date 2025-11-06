@@ -1,0 +1,22 @@
+{
+  "name": "FileMetadataCodesign",
+  "type": "FileMetadataCodesign",
+  "description": "File metadata from the codesign utility.",
+  "children": [
+    {
+      "name": "compilation_time",
+      "type": "Timestamp",
+      "description": "Code sign timestamp"
+    },
+    {
+      "name": "format",
+      "type": "string",
+      "description": "Code sign format."
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "description": "Code sign identifier."
+    }
+  ]
+}

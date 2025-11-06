@@ -1,0 +1,29 @@
+{
+  "name": "Permission",
+  "type": "Permission",
+  "description": "System permission for resource access and modification.",
+  "children": [
+    {
+      "name": "description",
+      "type": "string",
+      "description": "Description of the permission (for example, 'Ability to update detect rules')."
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "description": "Name of the permission (for example, chronicle.analyst.updateRule)."
+    },
+    {
+      "name": "type",
+      "type": "Enum",
+      "description": "High level categorizations of permission type.",
+      "enumValues": [
+        "UNKNOWN_PERMISSION_TYPE",
+        "ADMIN_WRITE",
+        "ADMIN_READ",
+        "DATA_WRITE",
+        "DATA_READ"
+      ]
+    }
+  ]
+}

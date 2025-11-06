@@ -31,6 +31,23 @@ import udmVerdictResponse from './data/udm-verdictresponse.json';
 import udmIoCStatsType from './data/udm-iocstatstype.json';
 import udmProductConfidence from './data/udm-productconfidence.json';
 import udmIoCStats from './data/udm-iocstats.json';
+import udmCloud from './data/udm-cloud.json';
+import udmGroup from './data/udm-group.json';
+import udmPermission from './data/udm-permission.json';
+import udmPdfInfo from './data/udm-pdfinfo.json';
+import udmPeFileMetadata from './data/udm-pefilemetadata.json';
+import udmFileMetadataPE from './data/udm-filemetadatape.json';
+import udmFileMetadataSignatureInfo from './data/udm-filemetadatasignatureinfo.json';
+import udmSignerInfo from './data/udm-signerinfo.json'; 
+import udmX509 from './data/udm-x509.json';
+import udmSignatureInfo from './data/udm-signatureinfo.json';
+import udmFileMetadataCodesign from './data/udm-filemetadatacodesign.json';
+import udmRole from './data/udm-role.json';
+import udmInvestigation from './data/udm-investigation.json';
+import udmRegistry from './data/udm-registry.json';
+import udmUser from './data/udm-user.json';
+import udmTimeOff from './data/udm-timeoff.json';
+import udmMetric from './data/udm-metric.json';
 
 // --- Type-to-Template Mapping (no changes) ---
 const templateMap = {
@@ -53,12 +70,30 @@ const templateMap = {
   'Resource': udmResource?.children,
   'Attribute': udmAttribute?.children,
   'VerdictInfo': udmVerdictInfo?.children,
-  'VerdictType': udmVerdictType?.children, // Corrected
-  'ThreatVerdict': udmThreatVerdict?.children, // Corrected
-  'VerdictResponse': udmVerdictResponse?.children, // Corrected
-  'IoCStatsType': udmIoCStatsType?.children, // Corrected
-  'ProductConfidence': udmProductConfidence?.children, // Corrected
+  'VerdictType': udmVerdictType?.children, 
+  'ThreatVerdict': udmThreatVerdict?.children, 
+  'VerdictResponse': udmVerdictResponse?.children,
+  'IoCStatsType': udmIoCStatsType?.children, 
+  'ProductConfidence': udmProductConfidence?.children, 
   'IoCStats': udmIoCStats?.children,
+  'Cloud': udmCloud?.children,
+  'Group': udmGroup?.children,
+  'Permission': udmPermission?.children,
+  'PDFInfo': udmPdfInfo?.children,
+  'PeFileMetadata': udmPeFileMetadata?.children,
+  'FileMetadataPE': udmFileMetadataPE?.children,
+  'FileMetadataSignatureInfo': udmFileMetadataSignatureInfo?.children,
+  'SignerInfo': udmSignerInfo?.children,
+  'X509': udmX509?.children,
+  'SignatureInfo': udmSignatureInfo?.children,
+  'FileMetadataCodesign': udmFileMetadataCodesign?.children,  
+  'Role': udmRole?.children,
+  'Investigation': udmInvestigation?.children,
+  'Registry': udmRegistry?.children,
+  'User': udmUser?.children,
+  'TimeOff': udmTimeOff?.children,
+  'Metric': udmMetric?.children
+  
 };
 
 // --- Data Hydration Function (no changes) ---

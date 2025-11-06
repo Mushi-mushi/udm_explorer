@@ -1,0 +1,43 @@
+{
+  "name": "Metric",
+  "type": "Metric",
+  "description": "Stores precomputed aggregated analytic data for an entity.",
+  "children": [
+    {
+      "name": "dimensions",
+      "type": "Metric.Dimension",
+      "repeated": true,
+      "description": "All group by clauses used to calculate the metric."
+    },
+    {
+      "name": "export_window",
+      "type": "int64",
+      "description": "Export window for which the metric was exported."
+    },
+    {
+      "name": "first_seen",
+      "type": "Timestamp",
+      "description": "Timestamp of the first time the entity was seen in the environment."
+    },
+    {
+      "name": "last_seen",
+      "type": "Timestamp",
+      "description": "Timestamp of the last time the entity was seen in the environment."
+    },
+    {
+      "name": "metric_name",
+      "type": "Metric.MetricName",
+      "description": "Name of the analytic."
+    },
+    {
+      "name": "sum_measure",
+      "type": "Metric.Measure",
+      "description": "Sum of all precomputed measures for the given metric."
+    },
+    {
+      "name": "total_events",
+      "type": "int64",
+      "description": "Total number of events used to calculate the given precomputed metric."
+    }
+  ]
+}
