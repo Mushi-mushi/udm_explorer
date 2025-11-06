@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import UdmField from './components/UdmField';
 import DetailsPanel from './components/DetailsPanel';
+import LogstashPanel from './components/LogstashPanel';
 
 // --- (All data imports are unchanged) ---
 import udmEvent from './data/udm-event.json';
@@ -126,7 +127,7 @@ function App() {
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-solarized-base1">Unified Data Model Explorer</h1>
-          <p className="text-solarized-base00">An interactive viewer for the UDM schema.</p>
+          <p className="text-solarized-base00">An interactive viewer for the UDM schema and Gogstash operations.</p>
         </header>
 
         <div className="flex justify-center mb-4 gap-4">
@@ -136,37 +137,50 @@ function App() {
           <button onClick={() => { setView('entity'); resetView(); }} className={`px-6 py-2 rounded-full font-semibold transition-colors ${view === 'entity' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
             Entity Model
           </button>
+          <button onClick={() => { setView('logstash'); resetView(); }} className={`px-6 py-2 rounded-full font-semibold transition-colors ${view === 'logstash' ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
+            Gogstash Operations
+          </button>
         </div>
 
-        <div className="mb-4 max-w-lg mx-auto">
-          <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setSelectedUseCase(''); }} placeholder="Search for a UDM field (or 'repeated')..." className="w-full px-4 py-2 bg-solarized-base02 text-solarized-base1 rounded-full border-2 border-transparent focus:outline-none focus:border-solarized-cyan" />
-        </div>
-        <div className="flex justify-center flex-wrap gap-2 mb-8 max-w-3xl mx-auto">
-          <button onClick={() => setSelectedUseCase('')} className={`px-3 py-1 text-sm rounded-full transition-colors ${!selectedUseCase ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
-            All Fields
-          </button>
-          {allUseCases.map(uc => (
-            <button key={uc} onClick={() => { setSelectedUseCase(uc); setSearchQuery(''); }} className={`px-3 py-1 text-sm rounded-full transition-colors ${selectedUseCase === uc ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
-              {uc}
-            </button>
-          ))}
-        </div>
+        {view !== 'logstash' && (
+          <>
+            <div className="mb-4 max-w-lg mx-auto">
+              <input type="text" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setSelectedUseCase(''); }} placeholder="Search for a UDM field (or 'repeated')..." className="w-full px-4 py-2 bg-solarized-base02 text-solarized-base1 rounded-full border-2 border-transparent focus:outline-none focus:border-solarized-cyan" />
+            </div>
+            <div className="flex justify-center flex-wrap gap-2 mb-8 max-w-3xl mx-auto">
+              <button onClick={() => setSelectedUseCase('')} className={`px-3 py-1 text-sm rounded-full transition-colors ${!selectedUseCase ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
+                All Fields
+              </button>
+              {allUseCases.map(uc => (
+                <button key={uc} onClick={() => { setSelectedUseCase(uc); setSearchQuery(''); }} className={`px-3 py-1 text-sm rounded-full transition-colors ${selectedUseCase === uc ? 'bg-solarized-cyan text-solarized-base03' : 'bg-solarized-base02 hover:bg-solarized-base01'}`}>
+                  {uc}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="flex flex-col md:flex-row gap-8">
-          <main className="bg-solarized-base02 rounded-xl p-4 shadow-lg md:w-1/2 min-w-0">
-            <UdmField
-              key={view + searchQuery + selectedUseCase}
-              field={currentData}
-              path={[{ name: view, repeated: currentData.repeated || false }]}
-              selectedField={selectedFieldInfo.field}
-              searchQuery={searchQuery}
-              selectedUseCase={selectedUseCase}
-              onSelect={handleFieldSelect}
-            />
-          </main>
-          <aside className="md:w-1/2 min-w-0">
-            <DetailsPanel field={selectedFieldInfo.field} fullPathArray={selectedFieldInfo.pathArray} />
-          </aside>
+          {view !== 'logstash' ? (
+            <>
+              <main className="bg-solarized-base02 rounded-xl p-4 shadow-lg md:w-1/2 min-w-0">
+                <UdmField
+                  key={view + searchQuery + selectedUseCase}
+                  field={currentData}
+                  path={[{ name: view, repeated: currentData.repeated || false }]}
+                  selectedField={selectedFieldInfo.field}
+                  searchQuery={searchQuery}
+                  selectedUseCase={selectedUseCase}
+                  onSelect={handleFieldSelect}
+                />
+              </main>
+              <aside className="md:w-1/2 min-w-0">
+                <DetailsPanel field={selectedFieldInfo.field} fullPathArray={selectedFieldInfo.pathArray} />
+              </aside>
+            </>
+          ) : (
+            <LogstashPanel />
+          )}
         </div>
       </div>
     </div>
