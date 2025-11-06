@@ -2,36 +2,35 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DetailsPanel = ({ field, fullPath }) => {
-  // --- States for copy buttons and interactivity ---
+const DetailsPanel = ({ field, fullPathArray }) => {
   const [isPathCopied, setIsPathCopied] = useState(false);
   const [isLogstashCopied, setIsLogstashCopied] = useState(false);
   const [selectedEnumValue, setSelectedEnumValue] = useState(null);
 
-  // --- MODIFIED: Effect to auto-select the FIRST enum value on field change ---
   useEffect(() => {
-    // If the new field is an enum with values, default to the first one.
     if (field?.type?.toLowerCase() === 'enum' && field.enumValues?.length > 0) {
       setSelectedEnumValue(field.enumValues[0]);
     } else {
-      // Otherwise, clear the selection.
       setSelectedEnumValue(null);
     }
-  }, [field]); // Reruns whenever the selected 'field' prop changes.
+  }, [field]);
 
-  // --- (formatPath and handlePathCopyClick functions are unchanged) ---
-  const formatPath = (path) => {
-    if (!path) return '';
-    const parts = path.split('.');
-    if (parts.length > 1) {
-      const remainingParts = parts.slice(1);
-      remainingParts[0] = remainingParts[0].toLowerCase();
-      return remainingParts.join('.');
+  const formatPath = (pathArray) => {
+    if (!pathArray || pathArray.length < 2) return '';
+    const remainingParts = pathArray.slice(1);
+    let pathString = remainingParts.map(p => p.name).join('.');
+    
+    // Lowercase the very first part of the path string for display
+    const firstSegment = remainingParts[0]?.name.toLowerCase();
+    const restOfPath = pathString.substring(pathString.indexOf('.') + 1);
+    
+    if(remainingParts.length > 1){
+      return `${firstSegment}.${restOfPath}`;
     }
-    return path.toLowerCase();
+    return firstSegment;
   };
 
-  const formattedPath = formatPath(fullPath);
+  const formattedPath = formatPath(fullPathArray);
 
   const handlePathCopyClick = () => {
     if (!formattedPath) return;
@@ -41,15 +40,42 @@ const DetailsPanel = ({ field, fullPath }) => {
     }).catch(err => console.error('Failed to copy path: ', err));
   };
 
-  // --- Dynamic Gostash Mapping Logic ---
-  let displayLogstashMapping = field?.logstashMapping; // Prioritize mapping from JSON
+  let displayLogstashMapping = field?.logstashMapping;
 
   if (field && !displayLogstashMapping && field.type) {
     const fieldType = field.type.toLowerCase();
-    const udmPathString = `udm.${formattedPath}`;
     const sourceFieldPlaceholder = `source_${field.name}_field`;
 
-    if (field.repeated) {
+    const parentPath = fullPathArray ? fullPathArray.slice(0, -1) : [];
+    const isNestedInRepeated = parentPath.some(segment => segment.repeated);
+
+    // --- A. Handle fields nested in REPEATED objects (Special Case) ---
+    if (isNestedInRepeated) {
+        let logstashTargetPath = '[udm]';
+        let isFirstRepeatedFound = false;
+
+        fullPathArray.slice(1).forEach((segment, index) => {
+            // FIX: Lowercase the first segment name (e.g., "Event" -> "event")
+            const segmentName = index === 0 ? segment.name.toLowerCase() : segment.name;
+            logstashTargetPath += `[${segmentName}]`;
+            
+            // Add the [0] index immediately after the first repeated parent
+            if (segment.repeated && !isFirstRepeatedFound) {
+                logstashTargetPath += '[0]';
+                isFirstRepeatedFound = true;
+            }
+        });
+        
+        const nestedFilterTemplate = `mutate {
+  # NOTE: Bracket notation is required here to target an array element.
+  # This creates an array with one object and sets the nested field,
+  # which is a common pattern for parsing single, related entities.
+  add_field => { "${logstashTargetPath}" => "%{${sourceFieldPlaceholder}}" }
+}`;
+        displayLogstashMapping = nestedFilterTemplate;
+
+    // --- B. Handle all other fields ---
+    } else if (field.repeated) {
       if (fieldType === 'string') {
         const splitFilterTemplate = `mutate {
   # This splits a source string (e.g., "value1,value2") into an array.
@@ -57,73 +83,41 @@ const DetailsPanel = ({ field, fullPath }) => {
 }
 mutate {
   # Then, rename the new array to the UDM field.
-  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }
+  rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
 }`;
         displayLogstashMapping = splitFilterTemplate;
       } else {
         const renameFilterTemplate = `mutate {
   # This assumes the source field is already a correctly typed array.
-  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }
+  rename => { "${sourceFieldPlaceholder}" => "udm.${formattedPath}" }
 }`;
         displayLogstashMapping = renameFilterTemplate;
       }
     } else {
+      const udmPathString = `udm.${formattedPath}`;
       if (fieldType.includes('timestamp')) {
-        const dateFilterTemplate = `date {
-  match => ["${field.name}", "ISO8601"]
-  target => "${udmPathString}"
-}`;
-        displayLogstashMapping = dateFilterTemplate;
+        displayLogstashMapping = `date {\n  match => ["${field.name}", "ISO8601"]\n  target => "${udmPathString}"\n}`;
       } else if (fieldType === 'string') {
-        const mutateFilterTemplate = `mutate {
-  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }
-}`;
-        displayLogstashMapping = mutateFilterTemplate;
+        displayLogstashMapping = `mutate {\n  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }\n}`;
       } else if (fieldType.startsWith('int') || fieldType.startsWith('uint') || fieldType.startsWith('float') || fieldType.startsWith('double')) {
         const numericType = (fieldType.startsWith('int') || fieldType.startsWith('uint')) ? 'integer' : 'float';
-        const numericFilterTemplate = `mutate {
-  convert => { "${sourceFieldPlaceholder}" => "${numericType}" }
-}
-mutate {
-  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }
-}`;
-        displayLogstashMapping = numericFilterTemplate;
+        displayLogstashMapping = `mutate {\n  convert => { "${sourceFieldPlaceholder}" => "${numericType}" }\n}\nmutate {\n  rename => { "${sourceFieldPlaceholder}" => "${udmPathString}" }\n}`;
       } else if (fieldType === 'bool' || fieldType === 'boolean') {
-        const booleanFilterTemplate = `if [${sourceFieldPlaceholder}] in ["true", "True", "TRUE", "yes", "1"] {
-  mutate {
-    add_field => { "${udmPathString}" => "true" }
-  }
-} else if [${sourceFieldPlaceholder}] in ["false", "False", "FALSE", "no", "0"] {
-  mutate {
-    add_field => { "${udmPathString}" => "false" }
-  }
-}
-mutate {
-  convert => { "${udmPathString}" => "boolean" }
-}`;
-        displayLogstashMapping = booleanFilterTemplate;
-      } 
-      // --- MODIFIED: Enum logic is now much simpler ---
-      else if (fieldType === 'enum' && selectedEnumValue) {
-        // Always generate a static assignment based on the currently selected enum value.
-        const staticAssignmentTemplate = `mutate {
-  add_field => { "${udmPathString}" => "${selectedEnumValue}" }
-}`;
-        displayLogstashMapping = staticAssignmentTemplate;
+        displayLogstashMapping = `if [${sourceFieldPlaceholder}] in ["true", "True", "TRUE", "yes", "1"] {\n  mutate {\n    add_field => { "${udmPathString}" => "true" }\n  }\n} else if [${sourceFieldPlaceholder}] in ["false", "False", "FALSE", "no", "0"] {\n  mutate {\n    add_field => { "${udmPathString}" => "false" }\n  }\n}\nmutate {\n  convert => { "${udmPathString}" => "boolean" }\n}`;
+      } else if (fieldType === 'enum' && selectedEnumValue) {
+        displayLogstashMapping = `mutate {\n  # Statically assign the selected value.\n  add_field => { "${udmPathString}" => "${selectedEnumValue}" }\n}`;
       }
     }
   }
 
-  // --- (handleLogstashCopyClick is unchanged) ---
   const handleLogstashCopyClick = () => {
     if (!displayLogstashMapping) return;
     navigator.clipboard.writeText(displayLogstashMapping).then(() => {
       setIsLogstashCopied(true);
       setTimeout(() => setIsLogstashCopied(false), 2000);
-    }).catch(err => console.error('Failed to copy Gostash Mapping: ', err));
+    }).catch(err => console.error('Failed to copy Logstash mapping: ', err));
   };
   
-  // --- MODIFIED: Enum click handler just sets the value ---
   const handleEnumValueSelect = (value) => {
     setSelectedEnumValue(value);
   };
@@ -136,25 +130,11 @@ mutate {
     >
       <AnimatePresence mode="wait">
         {!field ? (
-          <motion.div
-            key="placeholder"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center text-solarized-base00"
-          >
+          <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center text-solarized-base00">
             Select a field to see its details.
           </motion.div>
         ) : (
-          <motion.div
-            key={field.name}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-6"
-          >
-            {/* --- Main Details Section (Unchanged) --- */}
+          <motion.div key={field.name} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.25 }} className="space-y-6">
             <div>
               {formattedPath && (
                 <div className="flex items-center justify-between gap-3 mb-2">
@@ -169,7 +149,6 @@ mutate {
               <p className="text-solarized-base0 mt-4 break-normal">{field.description}</p>
             </div>
 
-            {/* --- Key Field Use Cases Section (No Changes) --- */}
             {field.keyFieldInfo && field.keyFieldInfo.length > 0 && (
               <div>
                 <h3 className="text-xl font-bold text-solarized-base1 mb-3">Key Field Use Cases</h3>
@@ -183,11 +162,10 @@ mutate {
               </div>
             )}
 
-            {/* --- Gostash Mapping Section (Unchanged) --- */}
             {displayLogstashMapping && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-bold text-solarized-base1">Gostash Mapping</h3>
+                  <h3 className="text-xl font-bold text-solarized-base1">Logstash Mapping</h3>
                   <button onClick={handleLogstashCopyClick} className="bg-solarized-base01 text-solarized-base1 text-xs font-mono px-2 py-1 rounded-md hover:bg-solarized-cyan hover:text-solarized-base03 transition-colors duration-200 flex-shrink-0">
                     {isLogstashCopied ? 'Copied!' : 'Copy'}
                   </button>
@@ -198,7 +176,6 @@ mutate {
               </div>
             )}
 
-            {/* --- Enum Values Section (Unchanged, but now drives interactive logic) --- */}
             {field.enumValues && field.enumValues.length > 0 && (
               <div>
                 <h3 className="text-xl font-bold text-solarized-base1 mb-3">Acceptable Values</h3>
