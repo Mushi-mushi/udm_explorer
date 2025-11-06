@@ -2,7 +2,7 @@ name: Deploy UDM Explorer to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "alpha" ]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,19 @@ jobs:
           # point cache at the app's package.json (no lockfile in repo)
           cache-dependency-path: udm-explorer/package.json
 
+      - name: Set deployment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "subdirectory=." >> $GITHUB_OUTPUT
+            echo "homepage=https://mushi-mushi.github.io/udm_explorer/" >> $GITHUB_OUTPUT
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "subdirectory=alpha" >> $GITHUB_OUTPUT
+            echo "homepage=https://mushi-mushi.github.io/udm_explorer/alpha/" >> $GITHUB_OUTPUT
+            echo "environment=alpha" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install dependencies
         working-directory: udm-explorer
         # use npm install when no lockfile is present; faster reproducible builds
@@ -35,10 +48,18 @@ jobs:
 
       - name: Build
         working-directory: udm-explorer
-        run: npm run build
+        env:
+          PUBLIC_URL: ${{ steps.vars.outputs.homepage }}
+          REACT_APP_ENVIRONMENT: ${{ steps.vars.outputs.environment }}
+        run: |
+          # Temporarily update package.json homepage for this build
+          npm pkg set homepage="${{ steps.vars.outputs.homepage }}"
+          npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: udm-explorer/build
+          destination_dir: ${{ steps.vars.outputs.subdirectory }}
+          keep_files: true

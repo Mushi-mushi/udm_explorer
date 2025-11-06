@@ -3,156 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const logstashOperations = [
-  // === Data Transformation (mutate plugin) ===
-  {
-    category: 'Transformation',
-    name: 'mutate { rename }',
-    tags: ['mutate', 'transformation', 'mapping'],
-    description: 'Changes the name of a field, preserving its value and data type. The original field is removed. This is the most efficient way to map a source field to a UDM field when no type conversion is needed.',
-    example: `# Renames the 'src_ip' field to 'udm.principal.ip'
-mutate {
-  rename => { "src_ip" => "udm.principal.ip" }
-}
-
-# Multiple renames in one block
-mutate {
-  rename => {
-    "proto" => "event.idm.read_only_udm.network.ip_protocol"
-    "srcport" => "event.idm.read_only_udm.network.target.port"
-  }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { copy }',
-    tags: ['mutate', 'transformation', 'copy'],
-    description: 'Copies the value of a field to a new field, leaving the original field intact. This is useful when you need the same data in two different places.',
-    example: `
-# Copies the confidence score to another location.
-mutate {
-  copy => { "confidence" => "udm.security_result.confidence_score" }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { convert }',
-    tags: ['mutate', 'transformation', 'type-conversion'],
-    description: 'Changes the data type of a field. This is essential for ensuring that numbers are stored as integers or floats, and that booleans are stored correctly.',
-    example: `
-# Converts the source field to an integer *before* renaming it.
-mutate {
-  convert => { "source_bytes_field" => "integer" }
-}
-mutate {
-  rename => { "source_bytes_field" => "udm.network.sent_bytes" }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { replace }',
-    tags: ['mutate', 'transformation', 'assignment'],
-    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Logstash (SecOps), this replaces the standard Logstash `add_field` operation.',
-    example: `
-# Statically sets the 'event_type' to a UDM enum value.
-mutate {
-  replace => { "udm.metadata.event_type" => "USER_LOGIN" }
-}
-
-# Build a string by joining existing fields.
-mutate {
-  replace => { "joined_names" => "%{first_name} %{last_name}" }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'Building an Array (using merge)',
-    tags: ['mutate', 'transformation', 'arrays', 'merge'],
-    description: 'To create a repeated UDM field from a single value in Logstash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Logstash automatically creates an array with that field\'s value.',
-    example: `
-# SCENARIO 1: Single value → Array with one element
-# Source: "src_ip": "192.168.1.1"
-# Goal: "udm.principal.ip": ["192.168.1.1"]
-
-# IMPORTANT: Merge the field NAME (as string), not the value!
-mutate {
-  merge => { "udm.principal.ip" => "src_ip" }
-}
-
-# The above creates: "udm.principal.ip": ["192.168.1.1"]
-# This is the proven pattern from working Chronicle parsers.
-
-# SCENARIO 2: Multiple separate fields → Array with multiple elements
-# Source: "email1": "user@example.com", "email2": "admin@example.com"
-# Goal: "udm.target.user.email_addresses": ["user@example.com", "admin@example.com"]
-
-mutate {
-  merge => { "udm.target.user.email_addresses" => "email1" }
-}
-mutate {
-  merge => { "udm.target.user.email_addresses" => "email2" }
-}
-
-# Each merge appends the value to the array.
-
-# NOTE: The key insight is that merge expects a FIELD NAME,
-# not a field value with %{} syntax. Logstash handles array creation.`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { merge }',
-    tags: ['mutate', 'transformation', 'arrays', 'merge', 'objects'],
-    description: 'Combines two fields. If both are arrays, it appends the second to the first. If both are objects (hashes), it merges the keys. This is commonly used to add a structured object to a "repeated" UDM field.',
-    example: `
-# 1. Create a temporary object for a label.
-mutate {
-  replace => {
-    "temp_label.key" => "threat_actors"
-    "temp_label.value" => "%{joined_threat_actors}"
-  }
-}
-
-# 2. Merge the temporary object into the 'labels' array.
-mutate {
-  merge => { "udm.principal.labels" => "temp_label" }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { split }',
-    tags: ['mutate', 'transformation', 'arrays', 'strings'],
-    description: 'Splits a single string field into an array, based on a separator. This is the primary method for mapping a source field (e.g., a comma-separated list) to a "repeated" string field in UDM.',
-    example: `
-# Splits a string of email addresses into a proper array.
-mutate {
-  split => { "source_email_list" => "," }
-}
-mutate {
-  rename => { "source_email_list" => "udm.target.email_addresses" }
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { gsub }',
-    tags: ['mutate', 'transformation', 'strings', 'regex'],
-    description: 'Performs a global substitution on a string field using a regular expression. It\'s very useful for cleaning up data by removing unwanted characters or replacing patterns.',
-    example: `
-# Replaces all newline characters (\\n) in the description with a space.
-mutate {
-  gsub => ["description", "\\n", " "]
-}`
-  },
-  {
-    category: 'Transformation',
-    name: 'mutate { remove_field }',
-    tags: ['mutate', 'transformation', 'cleanup'],
-    description: 'Deletes one or more fields from an event. This is crucial for cleaning up temporary fields used during processing, keeping the final event clean and efficient.',
-    example: `
-# Removes temporary fields after their values have been merged.
-mutate {
-  remove_field => ["temp_label", "joined_threat_actors", "ag_check"]
-}`
-  },
-
   // === Data Extraction Methods ===
   {
     category: 'Data Extraction',
@@ -307,11 +157,144 @@ mutate {
 }`
   },
 
-  // === Control Flow and Advanced Patterns ===
+  // === Data Transformation (mutate plugin) ===
+  // === Data Transformation (mutate plugin) ===
   {
-    category: 'Control Flow',
+    category: 'Transformation',
+    name: 'mutate { rename }',
+    tags: ['mutate', 'transformation', 'mapping'],
+    description: 'Changes the name of a field, preserving its value and data type. The original field is removed. This is the most efficient way to map a source field to a UDM field when no type conversion is needed.',
+    example: `# Renames the 'src_ip' field to 'udm.principal.ip'
+mutate {
+  rename => { "src_ip" => "udm.principal.ip" }
+}
+
+# Multiple renames in one block
+mutate {
+  rename => {
+    "proto" => "event.idm.read_only_udm.network.ip_protocol"
+    "srcport" => "event.idm.read_only_udm.network.target.port"
+  }
+}`
+  },
+  {
+    category: 'Transformation',
+    name: 'mutate { copy }',
+    tags: ['mutate', 'transformation', 'copy'],
+    description: 'Copies the value of a field to a new field, leaving the original field intact. This is useful when you need the same data in two different places.',
+    example: `
+# Copies the confidence score to another location.
+mutate {
+  copy => { "confidence" => "udm.security_result.confidence_score" }
+}`
+  },
+  {
+    name: 'mutate { convert }',
+    description: 'Changes the data type of a field. This is essential for ensuring that numbers are stored as integers or floats, and that booleans are stored correctly.',
+    example: `
+# Converts the source field to an integer *before* renaming it.
+mutate {
+  convert => { "source_bytes_field" => "integer" }
+}
+mutate {
+  rename => { "source_bytes_field" => "udm.network.sent_bytes" }
+}`
+  },
+  {
+    name: 'mutate { replace }',
+    description: 'Overwrites the value of a field or creates a new field. Use this for static assignments, building strings dynamically, or initializing fields. In Logstash (SecOps), this replaces the standard Logstash `add_field` operation.',
+    example: `
+# Statically sets the 'event_type' to a UDM enum value.
+mutate {
+  replace => { "udm.metadata.event_type" => "USER_LOGIN" }
+}
+
+# Build a string by joining existing fields.
+mutate {
+  replace => { "joined_names" => "%{first_name} %{last_name}" }
+}`
+  },
+  {
+    name: 'Building an Array (using merge)',
+    description: 'To create a repeated UDM field from a single value in Logstash, use merge with the FIELD NAME (not value). When you merge a field name into a non-existent destination, Logstash automatically creates an array with that field\'s value.',
+    example: `
+# SCENARIO 1: Single value → Array with one element
+# Source: "src_ip": "192.168.1.1"
+# Goal: "udm.principal.ip": ["192.168.1.1"]
+
+# IMPORTANT: Merge the field NAME (as string), not the value!
+mutate {
+  merge => { "udm.principal.ip" => "src_ip" }
+}
+
+# The above creates: "udm.principal.ip": ["192.168.1.1"]
+# This is the proven pattern from working Chronicle parsers.
+
+# SCENARIO 2: Multiple separate fields → Array with multiple elements
+# Source: "email1": "user@example.com", "email2": "admin@example.com"
+# Goal: "udm.target.user.email_addresses": ["user@example.com", "admin@example.com"]
+
+mutate {
+  merge => { "udm.target.user.email_addresses" => "email1" }
+}
+mutate {
+  merge => { "udm.target.user.email_addresses" => "email2" }
+}
+
+# Each merge appends the value to the array.
+
+# NOTE: The key insight is that merge expects a FIELD NAME,
+# not a field value with %{} syntax. Logstash handles array creation.`
+  },
+  {
+    name: 'mutate { merge }',
+    description: 'Combines two fields. If both are arrays, it appends the second to the first. If both are objects (hashes), it merges the keys. This is commonly used to add a structured object to a "repeated" UDM field.',
+    example: `
+# 1. Create a temporary object for a label.
+mutate {
+  replace => {
+    "temp_label.key" => "threat_actors"
+    "temp_label.value" => "%{joined_threat_actors}"
+  }
+}
+
+# 2. Merge the temporary object into the 'labels' array.
+mutate {
+  merge => { "udm.principal.labels" => "temp_label" }
+}`
+  },
+  {
+    name: 'mutate { split }',
+    description: 'Splits a single string field into an array, based on a separator. This is the primary method for mapping a source field (e.g., a comma-separated list) to a "repeated" string field in UDM.',
+    example: `
+# Splits a string of email addresses into a proper array.
+mutate {
+  split => { "source_email_list" => "," }
+}
+mutate {
+  rename => { "source_email_list" => "udm.target.email_addresses" }
+}`
+  },
+  {
+    name: 'mutate { gsub }',
+    description: 'Performs a global substitution on a string field using a regular expression. It\'s very useful for cleaning up data by removing unwanted characters or replacing patterns.',
+    example: `
+# Replaces all newline characters (\\n) in the description with a space.
+mutate {
+  gsub => ["description", "\\n", " "]
+}`
+  },
+  {
+    name: 'mutate { remove_field }',
+    description: 'Deletes one or more fields from an event. This is crucial for cleaning up temporary fields used during processing, keeping the final event clean and efficient.',
+    example: `
+# Removes temporary fields after their values have been merged.
+mutate {
+  remove_field => ["temp_label", "joined_threat_actors", "ag_check"]
+}`
+  },
+  {
     name: 'Looping over Arrays (`for ... in ...`)',
-    tags: ['loops', 'arrays', 'iteration', 'control-flow'],
     description: 'A core Logstash feature for processing arrays. It iterates through each item, allowing you to extract data, perform conversions, and map to repeated UDM fields. This is essential for converting array elements without a ruby filter.',
     example: `
 # GOAL: Convert an array of port strings ["80", "443"] to integers [80, 443].
@@ -337,9 +320,7 @@ mutate {
 }`
   },
   {
-    category: 'Advanced Patterns',
     name: 'Mapping to Nested Repeated Fields',
-    tags: ['advanced', 'arrays', 'nested', 'objects'],
     description: 'When a UDM field is inside a "repeated" object (e.g., `intermediary.nat_port` where `intermediary` is repeated), you cannot map to it directly. You must first create a temporary object with the nested field, then merge that object into the repeated parent array.',
     example: `
 # SCENARIO: Map a source field to a nested field inside a repeated parent
@@ -403,9 +384,7 @@ mutate {
 `
   },
   {
-    category: 'Data Extraction',
     name: 'grok Filter',
-    tags: ['extraction', 'parsing', 'unstructured', 'regex'],
     description: 'Parses unstructured text data into structured fields using predefined or custom patterns. It\'s the most powerful tool for logs that are not in a format like JSON or CSV.',
     example: `
 # Tries to match the 'description' field against several patterns.
@@ -427,9 +406,7 @@ if ![match_error] {
 }`
   },
   {
-    category: 'Filters',
     name: 'date Filter',
-    tags: ['timestamp', 'parsing', 'date', 'time'],
     description: 'Parses a timestamp from a string field. The "target" option is used to populate a UDM timestamp field. Without "target", it overwrites the event\'s main @timestamp.',
     example: `
 # Parses a timestamp from the 'log_time' field.
@@ -439,9 +416,7 @@ date {
 }`
   },
   {
-    category: 'Control Flow',
     name: 'Conditional Logic (if/else)',
-    tags: ['conditionals', 'logic', 'control-flow'],
     description: 'Allows you to apply filters only when certain conditions are met. This includes checking for field existence, comparing values, or matching regular expressions (`=~`).',
     example: `
 # Maps event type based on a source event ID.
@@ -455,9 +430,7 @@ if [message] =~ "malicious" {
 }`
   },
   {
-    category: 'Error Handling',
     name: 'on_error Parameter (Logstash)',
-    tags: ['error-handling', 'debugging', 'Logstash'],
     description: 'A parameter available on most filters (like `json`, `date`, `grok`) that provides error handling. Instead of dropping an event on failure, it adds a tag or field, which is invaluable for debugging parsing issues.',
     example: `
 # If the 'message' field is not valid JSON,
@@ -468,9 +441,7 @@ json {
 }`
   },
   {
-    category: 'Debugging',
     name: 'statedump {} Filter (Logstash)',
-    tags: ['debugging', 'Logstash', 'troubleshooting'],
     description: 'A powerful debugging filter specific to Google SecOps (Logstash). It prints the entire state of the event (all fields and values) to the ingestion logs at the exact point it is placed in the pipeline. Use it inside conditionals to inspect specific events.',
     example: `
 # If a specific error tag is present, dump the event state for debugging.
@@ -479,9 +450,7 @@ if "error_json_parse_failed" in [tags] {
 }`
   },
   {
-    category: 'Output',
     name: 'Finalization (`@output`) (Logstash)',
-    tags: ['output', 'Logstash', 'finalization'],
     description: 'A Logstash-specific convention for defining the final event to be sent. You build your complete UDM event in a temporary field (e.g., "event"), and then merge it into the special "@output" field at the very end of the pipeline.',
     example: `
 # ... all parsing logic populates the 'event' field ...
@@ -508,39 +477,8 @@ const ArrowIcon = ({ isExpanded }) => (
     </motion.svg>
 );
 
-const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-solarized-base00" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-  </svg>
-);
-
 const LogstashPanel = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredOperations = useMemo(() => {
-    if (!searchQuery.trim()) return logstashOperations;
-
-    const query = searchQuery.toLowerCase();
-    return logstashOperations.filter(op =>
-      op.name.toLowerCase().includes(query) ||
-      op.description.toLowerCase().includes(query) ||
-      (op.tags && op.tags.some(tag => tag.toLowerCase().includes(query))) ||
-      op.category.toLowerCase().includes(query) ||
-      op.example.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
-
-  const groupedOperations = useMemo(() => {
-    const groups = {};
-    filteredOperations.forEach(op => {
-      if (!groups[op.category]) {
-        groups[op.category] = [];
-      }
-      groups[op.category].push(op);
-    });
-    return groups;
-  }, [filteredOperations]);
 
   const handleToggle = (index) => {
     setExpandedIndex(prevIndex => (prevIndex === index ? null : index));
@@ -553,27 +491,12 @@ const LogstashPanel = () => {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      {/* Header with search bar */}
+      {/* Header with documentation link */}
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
         <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Parser Syntax Reference</h2>
-        <p className="text-solarized-base0 mb-4">
-          Complete guide to Google Chronicle parser syntax (Logstash). Search and expand sections below for examples and usage patterns.
+        <p className="text-solarized-base0">
+          Complete guide to Google Chronicle parser syntax (Logstash). Expand sections below for examples and usage patterns.
         </p>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search operations, tags, or examples..."
-            className="w-full pl-10 pr-4 py-2 bg-solarized-base03 text-solarized-base0 border border-solarized-base01 rounded-lg focus:outline-none focus:ring-2 focus:ring-solarized-cyan focus:border-transparent placeholder-solarized-base00"
-          />
-        </div>
-
         <div className="mt-4 p-3 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
           <p className="text-solarized-base1 text-sm">
             📖 <strong>Reference:</strong>{' '}
@@ -589,47 +512,41 @@ const LogstashPanel = () => {
         </div>
       </div>
 
-      {/* Grouped Operations */}
-      {Object.entries(groupedOperations).map(([category, operations]) => (
-        <div key={category} className="bg-solarized-base02 rounded-xl p-6 shadow-lg w-full space-y-4">
-          <h3 className="text-2xl font-bold text-solarized-cyan mb-4">{category}</h3>
+      <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg w-full space-y-4">
+      {logstashOperations.map((op, index) => (
+        <div key={op.name} className="border-b border-solarized-base01 pb-4 last:border-b-0">
+          <div
+            onClick={() => handleToggle(index)}
+            className="flex items-center cursor-pointer py-2"
+          >
+            <ArrowIcon isExpanded={expandedIndex === index} />
+            <h2 className="ml-2 font-mono text-xl text-solarized-cyan">{op.name}</h2>
+          </div>
 
-          {operations.map((op) => {
-            const globalIndex = logstashOperations.indexOf(op);
-            return (
-              <div key={op.name} className="border-b border-solarized-base01 pb-4 last:border-b-0">
-                <div
-                  onClick={() => handleToggle(globalIndex)}
-                  className="flex items-center cursor-pointer py-2 hover:bg-solarized-base03 rounded px-2 -ml-2"
-                >
-                  <ArrowIcon isExpanded={expandedIndex === globalIndex} />
-                  <h4 className="ml-2 font-mono text-lg text-solarized-cyan">{op.name}</h4>
-                </div>                <AnimatePresence>
-                  {expandedIndex === globalIndex && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="pl-7 pr-2 space-y-4">
-                        <p className="text-solarized-base0 mt-2">{op.description}</p>
-                        <div>
-                          <h4 className="text-solarized-base1 font-semibold mb-2">Example:</h4>
-                          <pre className="bg-solarized-base03 text-solarized-blue p-4 rounded-md text-sm overflow-x-auto">
-                            <code>{op.example.trim()}</code>
-                          </pre>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+          <AnimatePresence>
+            {expandedIndex === index && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="pl-7 pr-2 space-y-4">
+                  <p className="text-solarized-base0 mt-2">{op.description}</p>
+                  <div>
+                    <h4 className="text-solarized-base1 font-semibold mb-2">Example:</h4>
+                    <pre className="bg-solarized-base03 text-solarized-blue p-4 rounded-md text-sm overflow-x-auto">
+                      <code>{op.example.trim()}</code>
+                    </pre>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ))}
+      </div>
     </motion.div>
   );
 };

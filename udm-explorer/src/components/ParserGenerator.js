@@ -292,14 +292,14 @@ const ParserGenerator = () => {
     return null;
   };
 
-  // Generate Gostash parser
+  // Generate Logstash parser
   const generateParser = () => {
     if (mappings.length === 0) {
       setGeneratedParser('# No mappings defined. Add at least one field mapping.');
       return;
     }
 
-    let parser = `# Gostash Parser Configuration
+    let parser = `# Logstash Parser Configuration
 # Generated on ${new Date().toISOString()}
 
 filter {
@@ -497,9 +497,9 @@ filter {
     >
       {/* Header */}
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
-        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Gostash Parser Generator (Work in progress)</h2>
+        <h2 className="text-3xl font-bold text-solarized-cyan mb-2">Logstash Parser Generator (Work in progress)</h2>
         <p className="text-solarized-base0">
-          Paste a sample JSON log event, map fields to UDM paths, and generate a complete Gostash parser configuration.
+          Paste a sample JSON log event, map fields to UDM paths, and generate a complete Logstash parser configuration.
         </p>
       </div>
 
@@ -620,7 +620,7 @@ filter {
             className="bg-solarized-base02 rounded-xl p-6 shadow-lg"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-bold text-solarized-base1">Step 3: Generated Gostash Parser</h3>
+              <h3 className="text-xl font-bold text-solarized-base1">Step 3: Generated Logstash Parser</h3>
               <button
                 onClick={handleCopyParser}
                 className="px-4 py-2 bg-solarized-cyan text-solarized-base03 text-sm font-semibold rounded-full hover:bg-solarized-blue transition-colors"
