@@ -514,7 +514,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-const LogstashPanel = ({ searchQuery = '' }) => {
+const LogstashPanel = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
