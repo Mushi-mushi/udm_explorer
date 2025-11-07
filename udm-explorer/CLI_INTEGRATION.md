@@ -61,7 +61,7 @@ npm start
 2. **Test Parser**: Click "Test Parser" to send your parser and sample log to the backend
 3. **Backend Execution**: The backend server:
    - Creates temporary files for parser.conf and sample log
-   - Executes: `secops parser run --log-type CUSTOM --parser-code-file <parser> --logs-file <log>`
+   - Executes: `secops parser run --log-type CATCH_ALL --parser-code-file <parser> --logs-file <log>`
    - Returns the parsed UDM output
 4. **View Results**: See the Chronicle CLI output displayed in the UI
 

@@ -48,7 +48,7 @@ app.post('/api/test-parser', async (req, res) => {
     console.log('Log file size after write:', logContent.length, 'bytes');
 
     // Execute Chronicle CLI command
-    const command = `secops parser run --log-type ${logType} --parser-code-file "${parserFile}" --logs-file "${logFile}"`;
+    const command = `secops --region europe --customer-id 371d51d3-e6f6-4553-b37e-89cea3660dbe --project-id 438765243710 parser run --log-type CATCH_ALL --parser-code-file "${parserFile}" --logs-file "${logFile}"`;
 
     console.log('\n--- Parser Test Request ---');
     console.log('Command:', command);
