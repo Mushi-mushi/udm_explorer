@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://mushi-mushi.github.io/udm_explorer/static/css/main.a9e74000.css",
-    "main.js": "https://mushi-mushi.github.io/udm_explorer/static/js/main.719668fc.js",
+    "main.css": "https://mushi-mushi.github.io/udm_explorer/static/css/main.3af0ec78.css",
+    "main.js": "https://mushi-mushi.github.io/udm_explorer/static/js/main.2a1b761d.js",
     "static/js/453.c7d0144f.chunk.js": "https://mushi-mushi.github.io/udm_explorer/static/js/453.c7d0144f.chunk.js",
     "index.html": "https://mushi-mushi.github.io/udm_explorer/index.html",
-    "main.a9e74000.css.map": "https://mushi-mushi.github.io/udm_explorer/static/css/main.a9e74000.css.map",
-    "main.719668fc.js.map": "https://mushi-mushi.github.io/udm_explorer/static/js/main.719668fc.js.map",
+    "main.3af0ec78.css.map": "https://mushi-mushi.github.io/udm_explorer/static/css/main.3af0ec78.css.map",
+    "main.2a1b761d.js.map": "https://mushi-mushi.github.io/udm_explorer/static/js/main.2a1b761d.js.map",
     "453.c7d0144f.chunk.js.map": "https://mushi-mushi.github.io/udm_explorer/static/js/453.c7d0144f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a9e74000.css",
-    "static/js/main.719668fc.js"
+    "static/css/main.3af0ec78.css",
+    "static/js/main.2a1b761d.js"
   ]
 }
