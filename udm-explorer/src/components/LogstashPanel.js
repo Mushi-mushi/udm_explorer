@@ -542,34 +542,6 @@ const LogstashPanel = ({ searchQuery = '' }) => {
     return groups;
   }, [filteredOperations]);
 
-  const filteredOperations = useMemo(() => {
-    if (!searchQuery.trim()) return logstashOperations;
-
-    const query = searchQuery.toLowerCase();
-    return logstashOperations.filter(op =>
-      op.name.toLowerCase().includes(query) ||
-      op.description.toLowerCase().includes(query) ||
-      (op.tags && op.tags.some(tag => tag.toLowerCase().includes(query))) ||
-      op.category.toLowerCase().includes(query) ||
-      op.example.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
-
-  const groupedOperations = useMemo(() => {
-    const groups = {};
-    filteredOperations.forEach(op => {
-      if (!groups[op.category]) {
-        groups[op.category] = [];
-      }
-      groups[op.category].push(op);
-    });
-    return groups;
-  }, [filteredOperations]);
-
-  const handleToggle = (index) => {
-    setExpandedIndex(prevIndex => (prevIndex === index ? null : index));
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
