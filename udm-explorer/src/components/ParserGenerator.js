@@ -96,6 +96,11 @@ const typeMap = {
 
 const ParserGenerator = ({ parserState, setParserState }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState({
+    step1: false, // JSON Input
+    step2: false, // Field Mapping
+    step3: false, // Generated Parser
+  });
 
   // Destructure state for easier access
   const {
@@ -111,6 +116,11 @@ const ParserGenerator = ({ parserState, setParserState }) => {
   // Helper to update parser state
   const updateState = (updates) => {
     setParserState(prev => ({ ...prev, ...updates }));
+  };
+
+  // Toggle section collapse
+  const toggleSection = (section) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   // Extract all fields from JSON object recursively
@@ -613,30 +623,45 @@ filter {
 
       {/* JSON Input Section */}
       <div className="bg-solarized-base02 rounded-xl p-6 shadow-lg">
-        <h3 className="text-xl font-bold text-solarized-base1 mb-3">Step 1: Paste Sample JSON Event</h3>
-        <textarea
-          value={jsonInput}
-          onChange={(e) => updateState({ jsonInput: e.target.value })}
-          placeholder='{"timestamp": "2024-01-01T12:00:00Z", "src_ip": "192.168.1.1", "event_type": "login"}'
-          className="w-full h-48 p-4 bg-solarized-base03 text-solarized-base1 font-mono text-sm rounded-lg border-2 border-transparent focus:outline-none focus:border-solarized-cyan resize-y"
-        />
-
-        {parseError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 p-3 bg-solarized-red bg-opacity-20 border border-solarized-red rounded-lg text-solarized-red text-sm"
-          >
-            {parseError}
-          </motion.div>
-        )}
-
-        <button
-          onClick={handleParseJson}
-          className="mt-4 px-6 py-2 bg-solarized-cyan text-solarized-base03 font-semibold rounded-full hover:bg-solarized-blue transition-colors"
+        <div
+          className="flex items-center justify-between cursor-pointer mb-3"
+          onClick={() => toggleSection('step1')}
         >
-          Parse JSON
-        </button>
+          <h3 className="text-xl font-bold text-solarized-base1">
+            {collapsedSections.step1 ? '▶' : '▼'} Step 1: Paste Sample JSON Event
+          </h3>
+          <span className="text-solarized-base01 text-sm">
+            {collapsedSections.step1 ? 'Click to expand' : 'Click to collapse'}
+          </span>
+        </div>
+
+        {!collapsedSections.step1 && (
+          <>
+            <textarea
+              value={jsonInput}
+              onChange={(e) => updateState({ jsonInput: e.target.value })}
+              placeholder='{"timestamp": "2024-01-01T12:00:00Z", "src_ip": "192.168.1.1", "event_type": "login"}'
+              className="w-full h-48 p-4 bg-solarized-base03 text-solarized-base1 font-mono text-sm rounded-lg border-2 border-transparent focus:outline-none focus:border-solarized-cyan resize-y"
+            />
+
+            {parseError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 p-3 bg-solarized-red bg-opacity-20 border border-solarized-red rounded-lg text-solarized-red text-sm"
+              >
+                {parseError}
+              </motion.div>
+            )}
+
+            <button
+              onClick={handleParseJson}
+              className="mt-4 px-6 py-2 bg-solarized-cyan text-solarized-base03 font-semibold rounded-full hover:bg-solarized-blue transition-colors"
+            >
+              Parse JSON
+            </button>
+          </>
+        )}
       </div>
 
       {/* Parsed Fields & Mapping Section */}
@@ -648,77 +673,86 @@ filter {
             exit={{ opacity: 0, y: -20 }}
             className="bg-solarized-base02 rounded-xl p-6 shadow-lg"
           >
-            <h3 className="text-xl font-bold text-solarized-base1 mb-3">Step 2: Map Fields to UDM</h3>
-            <p className="text-solarized-base00 mb-4 text-sm">
-              Click "Add Mapping" to map source fields to UDM paths. Enter the UDM path starting with "udm." (e.g., "udm.principal.ip").
-              The generator will automatically place it under "event.idm.read_only_udm.*".
-            </p>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {parsedFields.map((field, idx) => {
-                const isMapped = mappingExists(field.path);
-
-                return (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-solarized-base03 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-mono text-solarized-cyan text-sm break-all">
-                          {field.path}
-                        </span>
-                        <span className="text-xs text-solarized-base00">
-                          ({field.type})
-                        </span>
-                      </div>
-                      <div className="text-xs text-solarized-base01 font-mono break-all">
-                        Value: {JSON.stringify(field.value)}
-                      </div>
-
-                      {isMapped && (
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            value={mappings.find(m => m.sourcePath === field.path)?.udmPath || ''}
-                            onChange={(e) => handleUpdateUdmPath(field.path, e.target.value)}
-                            placeholder="event.idm.read_only_udm.***"
-                            className="w-full px-3 py-1.5 bg-solarized-base02 text-solarized-base1 text-sm rounded border-2 border-solarized-base01 focus:outline-none focus:border-solarized-cyan"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {!isMapped ? (
-                      <button
-                        onClick={() => handleAddMapping(field.path)}
-                        className="px-3 py-1 bg-solarized-green text-solarized-base03 text-sm font-semibold rounded hover:bg-solarized-cyan transition-colors flex-shrink-0"
-                      >
-                        Add Mapping
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleRemoveMapping(field.path)}
-                        className="px-3 py-1 bg-solarized-red text-solarized-base03 text-sm font-semibold rounded hover:bg-solarized-orange transition-colors flex-shrink-0"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+            <div
+              className="flex items-center justify-between cursor-pointer mb-3"
+              onClick={() => toggleSection('step2')}
+            >
+              <h3 className="text-xl font-bold text-solarized-base1">
+                {collapsedSections.step2 ? '▶' : '▼'} Step 2: Map Fields to UDM
+              </h3>
+              <span className="text-solarized-base01 text-sm">
+                {collapsedSections.step2 ? 'Click to expand' : 'Click to collapse'}
+              </span>
             </div>
 
-            {mappings.length > 0 && (
+            {!collapsedSections.step2 && (
+              <>
+                <p className="text-solarized-base00 mb-4 text-sm">
+                  Click "Add Mapping" to map source fields to UDM paths. Enter the UDM path starting with "udm." (e.g., "udm.principal.ip").
+                  The generator will automatically place it under "event.idm.read_only_udm.*".
+                </p>
+
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {parsedFields.map((field, idx) => {
+                    const isMapped = mappingExists(field.path);
+
+                    return (
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-solarized-base03 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <span className="font-mono text-solarized-cyan text-sm break-all">
+                              {field.path}
+                            </span>
+                            <span className="text-xs text-solarized-base00">
+                              ({field.type})
+                            </span>
+                          </div>
+                          <div className="text-xs text-solarized-base01 font-mono break-all">
+                            Value: {JSON.stringify(field.value)}
+                          </div>
+
+                          {isMapped && (
+                            <div className="mt-2">
+                              <input
+                                type="text"
+                                value={mappings.find(m => m.sourcePath === field.path)?.udmPath || ''}
+                                onChange={(e) => handleUpdateUdmPath(field.path, e.target.value)}
+                                placeholder="event.idm.read_only_udm.***"
+                                className="w-full px-3 py-1.5 bg-solarized-base02 text-solarized-base1 text-sm rounded border-2 border-solarized-base01 focus:outline-none focus:border-solarized-cyan"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {!isMapped ? (
+                          <button
+                            onClick={() => handleAddMapping(field.path)}
+                            className="px-3 py-1 bg-solarized-green text-solarized-base03 text-sm font-semibold rounded hover:bg-solarized-cyan transition-colors flex-shrink-0"
+                          >
+                            Add Mapping
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRemoveMapping(field.path)}
+                            className="px-3 py-1 bg-solarized-red text-solarized-base03 text-sm font-semibold rounded hover:bg-solarized-orange transition-colors flex-shrink-0"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {mappings.length > 0 && !collapsedSections.step2 && (
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={generateParser}
                   className="px-6 py-2 bg-solarized-blue text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors"
                 >
                   Generate Parser ({mappings.length} mapping{mappings.length !== 1 ? 's' : ''})
-                </button>
-                <button
-                  onClick={testParser}
-                  className="px-6 py-2 bg-solarized-green text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors"
-                >
-                  🧪 Test Parser
                 </button>
               </div>
             )}
@@ -735,30 +769,56 @@ filter {
             exit={{ opacity: 0, y: -20 }}
             className="bg-solarized-base02 rounded-xl p-6 shadow-lg"
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-bold text-solarized-base1">Step 3: Generated Logstash Parser</h3>
-              <button
-                onClick={handleCopyParser}
-                className="px-4 py-2 bg-solarized-cyan text-solarized-base03 text-sm font-semibold rounded-full hover:bg-solarized-blue transition-colors"
-              >
-                {isCopied ? 'Copied!' : 'Copy Parser'}
-              </button>
+            <div
+              className="flex items-center justify-between cursor-pointer mb-3"
+              onClick={() => toggleSection('step3')}
+            >
+              <h3 className="text-xl font-bold text-solarized-base1">
+                {collapsedSections.step3 ? '▶' : '▼'} Step 3: Generated Logstash Parser
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-solarized-base01 text-sm">
+                  {collapsedSections.step3 ? 'Click to expand' : 'Click to collapse'}
+                </span>
+                {!collapsedSections.step3 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyParser();
+                    }}
+                    className="px-4 py-2 bg-solarized-cyan text-solarized-base03 text-sm font-semibold rounded-full hover:bg-solarized-blue transition-colors"
+                  >
+                    {isCopied ? 'Copied!' : 'Copy Parser'}
+                  </button>
+                )}
+              </div>
             </div>
 
-            <pre className="bg-solarized-base03 text-solarized-blue p-4 rounded-lg text-sm overflow-x-auto max-h-96 overflow-y-auto">
-              <code>{generatedParser}</code>
-            </pre>
+            {!collapsedSections.step3 && (
+              <>
+                <textarea
+                  value={generatedParser}
+                  onChange={(e) => updateState({ generatedParser: e.target.value })}
+                  className="w-full h-96 p-4 bg-solarized-base03 text-solarized-blue font-mono text-sm rounded-lg border-2 border-transparent focus:outline-none focus:border-solarized-cyan resize-y overflow-auto"
+                  spellCheck="false"
+                />
 
-            <div className="mt-4 p-4 bg-solarized-yellow bg-opacity-10 border border-solarized-yellow rounded-lg">
-              <h4 className="text-solarized-yellow font-semibold mb-2">⚠️ Important Notes:</h4>
-              <ul className="text-solarized-base0 text-sm space-y-1 list-disc list-inside">
-                <li>Review and test the generated parser in a development environment</li>
-                <li>Adjust timestamp parsing formats based on your actual log format</li>
-                <li>Add additional logic for conditional mappings or transformations</li>
-                <li>Configure the output section for your specific destination</li>
-                <li>Handle array fields according to your UDM schema requirements</li>
-              </ul>
-            </div>
+                <div className="mt-4 flex gap-3">
+                  <button
+                    onClick={testParser}
+                    className="px-6 py-2 bg-solarized-green text-solarized-base03 font-semibold rounded-full hover:bg-solarized-cyan transition-colors flex items-center gap-2"
+                  >
+                    🧪 Test Parser
+                  </button>
+                  <button
+                    onClick={generateParser}
+                    className="px-6 py-2 bg-solarized-orange text-solarized-base03 font-semibold rounded-full hover:bg-solarized-yellow transition-colors"
+                  >
+                    🔄 Regenerate from Mappings
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -853,15 +913,6 @@ filter {
                   </div>
                 )}
 
-                {testOutput.output && (
-                  <div>
-                    <h4 className="text-solarized-green font-semibold mb-2">✅ UDM Event Output:</h4>
-                    <pre className="bg-solarized-base03 text-solarized-green p-4 rounded-lg text-sm overflow-x-auto max-h-96 overflow-y-auto">
-                      <code>{JSON.stringify(testOutput.output, null, 2)}</code>
-                    </pre>
-                  </div>
-                )}
-
                 {testOutput.rawOutput && (
                   <div>
                     <h4 className="text-solarized-cyan font-semibold mb-2">📋 Raw CLI Output:</h4>
@@ -873,9 +924,7 @@ filter {
 
                 <div className="p-4 bg-solarized-green bg-opacity-10 border border-solarized-green rounded-lg">
                   <p className="text-solarized-base0 text-sm">
-                    ✅ <strong>Parser test completed successfully!</strong> {testOutput.cliInstalled ?
-                      'The output shows the actual result from Chronicle CLI.' :
-                      'Install the Chronicle CLI for real parser validation.'}
+                    ✅ <strong>Parser test completed successfully!</strong> The output shows the result from Chronicle CLI parser validation.
                   </p>
                 </div>
               </div>

@@ -514,9 +514,8 @@ const SearchIcon = () => (
   </svg>
 );
 
-const LogstashPanel = () => {
+const LogstashPanel = ({ searchQuery = '' }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredOperations = useMemo(() => {
     if (!searchQuery.trim()) return logstashOperations;
@@ -560,21 +559,7 @@ const LogstashPanel = () => {
           Complete guide to Google Chronicle parser syntax (Logstash). Search and expand sections below for examples and usage patterns.
         </p>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search operations, tags, or examples..."
-            className="w-full pl-10 pr-4 py-2 bg-solarized-base03 text-solarized-base0 border border-solarized-base01 rounded-lg focus:outline-none focus:ring-2 focus:ring-solarized-cyan focus:border-transparent placeholder-solarized-base00"
-          />
-        </div>
-
-        <div className="mt-4 p-3 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
+        <div className="p-3 bg-solarized-blue bg-opacity-10 border border-solarized-blue rounded-lg">
           <p className="text-solarized-base1 text-sm">
             📖 <strong>Reference:</strong>{' '}
             <a
